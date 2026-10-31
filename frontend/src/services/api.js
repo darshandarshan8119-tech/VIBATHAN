@@ -129,6 +129,36 @@ export async function apiAssistantChat(message, conversationId, explanationLevel
 }
 
 /**
+ * Get Verified Electronic Contract Notes & Escrow Transactions
+ */
+export async function apiGetTransactions() {
+  return apiRequest('/api/v1/transactions/');
+}
+
+/**
+ * Get APMC Delivery Gate Slot Bookings
+ */
+export async function apiGetMyBookings() {
+  return apiRequest('/api/v1/bookings/my-bookings/');
+}
+
+/**
+ * Create a Delivery Slot Booking
+ */
+export async function apiCreateSlotBooking(slotId, commodityCode, quantityQuintals, vehicleNumber, driverPhone) {
+  return apiRequest('/api/v1/bookings/create/', {
+    method: 'POST',
+    body: JSON.stringify({
+      slot_id: slotId,
+      commodity_code: commodityCode,
+      quantity_quintals: quantityQuintals,
+      vehicle_number: vehicleNumber,
+      driver_phone: driverPhone || '',
+    }),
+  });
+}
+
+/**
  * Place a Bid on an Auction Lot (Django Core with Row-Level Lock & Idempotency)
  */
 export async function apiPlaceBid(lotId, bidAmountPerQtl, idempotencyKey) {

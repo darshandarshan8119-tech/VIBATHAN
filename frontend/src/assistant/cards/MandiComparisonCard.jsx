@@ -103,11 +103,19 @@ export default function MandiComparisonCard({ data, onAction }) {
               </div>
 
               {isTopRank && onAction && (
-                <div className="mt-3 pt-2 border-t border-emerald-200/60 flex items-center justify-end">
+                <div className="mt-3 pt-2 border-t border-emerald-200/60 flex items-center justify-between gap-2">
                   <button
-                    onClick={() => onAction('SELECT_MANDI', { ...m, commodity, quantity })}
+                    type="button"
+                    onClick={() => onAction('VIEW_CONTRACT_NOTE')}
+                    className="text-[10px] font-mono text-slate-500 hover:text-slate-800 underline cursor-pointer">
+                    Transactions &amp; Escrow &rarr;
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onAction('SELECT_MANDI', { ...m, commodity, quantity, tradeIntent })}
                     className="px-3.5 py-1.5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold font-heading transition-all shadow-xs flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98]">
-                    <span>Select &amp; Book Slot</span>
+                    <span>{isBuying ? '⚡ Instant Buy & Book Slot' : '⚡ Select & Book Delivery Slot'}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>

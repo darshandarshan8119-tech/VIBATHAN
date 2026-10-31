@@ -102,14 +102,25 @@ export default function BookingCard({ data, onAction }) {
       {/* Confirmation Area */}
       <div className="pt-3">
         {confirmed ? (
-          <div className="p-3 bg-emerald-50 rounded-xl flex items-center justify-between text-xs text-emerald-800">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <div>
-                <span className="font-bold block">Weighbridge Priority Token Issued</span>
-                <span className="text-[10px] text-emerald-700">Present booking ID at APMC Gate 2 electronic weighment</span>
+          <div className="space-y-3">
+            <div className="p-3 bg-emerald-50 rounded-xl flex items-center justify-between text-xs text-emerald-800">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div>
+                  <span className="font-bold block">Weighbridge Priority Token Issued</span>
+                  <span className="text-[10px] text-emerald-700">Present booking ID at APMC Gate 2 electronic weighment</span>
+                </div>
               </div>
             </div>
+
+            {onAction && (
+              <button
+                onClick={() => onAction('VIEW_CONTRACT_NOTE')}
+                className="w-full py-2.5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs font-heading shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01] active:scale-[0.98]">
+                <span>📋 View in Transactions &amp; Escrow</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-3">

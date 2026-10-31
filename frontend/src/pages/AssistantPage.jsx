@@ -69,11 +69,14 @@ export default function AssistantPage({
         timestamp: new Date(assistant.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         card,
         farmerExplanation: response.farmer_explanation,
-        actions: card ? [
+        actions: (card?.type === 'booking' || card?.type === 'transaction') ? [
+          { label: '📋 View in Transactions & Escrow', type: 'VIEW_CONTRACT_NOTE' },
+          { label: '📊 Open Market Terminal', type: 'OPEN_TERMINAL' },
+        ] : (card ? [
+          { label: '⚡ Instant Buy & Book Slot', type: 'BOOK_SLOT' },
           { label: 'Explain more simply', type: 'EXPLAIN_SIMPLE' },
           { label: 'Show detailed analysis', type: 'EXPLAIN_DETAILED' },
-          { label: 'Explain how this was calculated', type: 'EXPLAIN_TECHNICAL' },
-        ] : [],
+        ] : []),
       };
       const conversation = response.conversation;
       setActiveConversationId(conversation.id);
