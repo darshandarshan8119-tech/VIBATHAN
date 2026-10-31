@@ -1,6 +1,18 @@
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
+
+try:
+    from dotenv import load_dotenv
+    # Load backend/.env if present
+    env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+    else:
+        load_dotenv()
+except ImportError:
+    pass
 
 
 @dataclass

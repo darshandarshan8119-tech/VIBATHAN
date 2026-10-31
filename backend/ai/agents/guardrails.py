@@ -56,3 +56,4 @@ def validate_domain_scope(user_message: str) -> Tuple[bool, str]:
                 return False, DOMAIN_REFUSAL_MESSAGE
 
     return True, ""
+
