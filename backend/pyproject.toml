@@ -1,0 +1,43 @@
+[project]
+name = "agrimart-market-intelligence-backend"
+version = "0.1.0"
+description = "AgriMart Market Intelligence backend powered by Django REST Framework and FastAPI."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "Django>=5.0,<5.3",
+    "djangorestframework>=3.15,<3.17",
+    "djangorestframework-simplejwt>=5.4.0",
+    "django-cors-headers>=4.7.0",
+    "psycopg[binary]>=3.2,<3.3",
+    "dj-database-url>=2.2,<3.0",
+    "redis>=5.0,<6.0",
+    "celery>=5.4,<5.6",
+    "fastapi>=0.116,<1.0",
+    "uvicorn[standard]>=0.35,<1.0",
+    "pydantic>=2.12,<3.0",
+    "python-jose[cryptography]>=3.3,<4.0",
+    "argon2-cffi>=23.1,<26.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3,<10.0",
+    "pytest-django>=4.8,<5.0",
+    "pytest-asyncio>=0.24,<1.0",
+    "ruff>=0.9,<1.0",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "agrimart.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = [
+    "*/migrations/*.py",
+    ".venv",
+]
+
