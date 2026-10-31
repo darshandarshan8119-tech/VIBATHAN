@@ -69,3 +69,4 @@ class SlotBooking(UUIDPrimaryKeyModel, TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.booking_reference} ({self.farmer.phone} - {self.commodity.name})"
+

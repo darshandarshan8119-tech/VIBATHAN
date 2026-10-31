@@ -71,3 +71,4 @@ def generate_price_forecast(
         "recommendation": recommendation,
         "forecastPoints": chart_points,
     }
+

@@ -34,3 +34,4 @@ class LLMConfig:
             max_tokens=int(os.getenv("LLM_MAX_TOKENS", "1500")),
             timeout_seconds=int(os.getenv("LLM_TIMEOUT_SECONDS", "25")),
         )
+

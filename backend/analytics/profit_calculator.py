@@ -62,25 +62,25 @@ def calculate_net_profit(
     gross = qty * rate
 
     # Freight cost: freight tariff * distance * quantity
-    freight = dist * freight_rate_per_km_quintal * qty
+    freight = round(dist * freight_rate_per_km_quintal * qty, 2)
 
     # Statutory APMC Cess (1.5%)
-    cess = gross * (mandi_cess_pct / 100.0)
+    cess = round(gross * (mandi_cess_pct / 100.0), 2)
 
     # Escrow Protection Guarantee (0.5%)
-    escrow = gross * (escrow_fee_pct / 100.0)
+    escrow = round(gross * (escrow_fee_pct / 100.0), 2)
 
     # Mandi Handling / Loading / Unloading (₹15/qtl)
-    loading = qty * loading_unloading_rate_per_qtl
+    loading = round(qty * loading_unloading_rate_per_qtl, 2)
 
     # Moisture deduction if exceeds standard basis
     moisture_ded = 0.0
     if moisture_pct > basis_moisture_pct:
         excess_pct = moisture_pct - basis_moisture_pct
-        moisture_ded = excess_pct * moisture_discount_rate_per_pct * qty
+        moisture_ded = round(excess_pct * moisture_discount_rate_per_pct * qty, 2)
 
-    total_ded = freight + cess + escrow + loading + moisture_ded
-    net_proc = max(gross - total_ded, 0.0)
+    total_ded = round(freight + cess + escrow + loading + moisture_ded, 2)
+    net_proc = round(max(gross - total_ded, 0.0), 2)
     eff_price = net_proc / qty if qty > 0 else 0.0
     ded_pct = (total_ded / gross * 100.0) if gross > 0 else 0.0
 
@@ -100,3 +100,4 @@ def calculate_net_profit(
         deduction_percentage=ded_pct,
         distance_km=dist,
     )
+

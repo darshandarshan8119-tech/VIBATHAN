@@ -124,3 +124,4 @@ class HoltLinearTrendForecaster:
             expected_change_pct=change_pct,
             residual_std=round(self.residual_std, 2),
         )
+

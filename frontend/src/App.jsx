@@ -193,6 +193,8 @@ export default function App() {
           setActiveAppView('terminal');
         }}
         onExitToLanding={handleExitToLanding}
+        activeAppView={activeAppView}
+        onNavigateView={handleNavigateView}
       />
 
       {/* Floating Toast */}

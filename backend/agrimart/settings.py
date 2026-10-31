@@ -24,6 +24,9 @@ INSTALLED_APPS = [
     "common",
     "users",
     "mandi",
+    "conversations",
+    "bookings",
+    "transactions",
 ]
 
 MIDDLEWARE = [

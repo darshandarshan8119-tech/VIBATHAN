@@ -37,12 +37,8 @@ def load_historical_price_series(
     prices = [sum(day_map[d]) / len(day_map[d]) for d in dates]
     volumes = [vol_map[d] for d in dates]
 
-    # If database had insufficient records, synthesize realistic baseline for forecasting
     if len(prices) < 14:
-        from ai.forecasting.seed_historical_tickers import seed_historical_ticker_series
-        seed_historical_ticker_series(days_back=60)
-        # re-query once
-        return load_historical_price_series(commodity_code, apmc_code, limit_days)
+        raise ValueError("At least 14 persisted DailyTicker observations are required for forecasting.")
 
     return {
         "commodity": commodity,

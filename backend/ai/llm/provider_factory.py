@@ -15,3 +15,4 @@ def get_llm_provider(config: LLMConfig = None) -> BaseLLMProvider:
         return OpenAICompatibleProvider(config)
     else:
         return RuleBasedLLMProvider(config)
+

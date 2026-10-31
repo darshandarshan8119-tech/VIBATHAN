@@ -40,3 +40,4 @@ class BaseLLMProvider(ABC):
     def generate(self, prompt: str) -> str:
         """Single turn text generation."""
         pass
+

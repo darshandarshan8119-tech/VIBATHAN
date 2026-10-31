@@ -106,3 +106,4 @@ class GeminiProvider(BaseLLMProvider):
     def generate(self, prompt: str) -> str:
         res = self.chat([ChatMessage(role="user", content=prompt)])
         return res.content
+

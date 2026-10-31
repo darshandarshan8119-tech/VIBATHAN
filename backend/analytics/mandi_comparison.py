@@ -125,3 +125,4 @@ def compare_regional_mandis(
         "recommendationReason": rec_reason,
         "mandis": comp_records,
     }
+

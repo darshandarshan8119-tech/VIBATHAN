@@ -41,6 +41,8 @@ def create_slot_booking_atomic(
         commodity = Commodity.objects.get(code=commodity_code)
     except Commodity.DoesNotExist:
         commodity = Commodity.objects.first()
+    if commodity is None:
+        raise ValidationError({"error": "No commodities are available for booking."})
 
     with transaction.atomic():
         try:
@@ -113,3 +115,4 @@ def seed_default_apmc_slots(apmc: APMC, target_date) -> None:
                 "status": DeliverySlot.Status.AVAILABLE,
             },
         )
+

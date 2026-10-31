@@ -106,3 +106,4 @@ def analyze_market_liquidity(
         "bids": bids,
         "asks": asks,
     }
+

@@ -16,21 +16,21 @@ class RuleBasedLLMProvider(BaseLLMProvider):
     def _extract_commodity(self, text: str) -> str:
         text_lower = text.lower()
         if "mustard" in text_lower or "sarson" in text_lower or "black mustard" in text_lower:
-            return "MUSTARD_BLACK"
+            return "MUST-BLK"
         if "cotton" in text_lower or "kapas" in text_lower or "shankar" in text_lower:
-            return "COTTON_SHANKAR6"
+            return "COTTON-S6"
         if "basmati" in text_lower or "1121" in text_lower:
-            return "PADDY_BASMATI_1121"
+            return "PAD-BASM"
         if "soybean" in text_lower or "soya" in text_lower:
-            return "SOYBEAN_YELLOW"
+            return "SOY-YEL"
         if "chilli" in text_lower or "mirch" in text_lower or "teja" in text_lower:
-            return "CHILLI_TEJA"
+            return "CHIL-TEJA"
         if "chana" in text_lower or "gram" in text_lower:
-            return "CHANA_DESI"
+            return "CHNA-DESI"
         if "paddy" in text_lower or "pr-106" in text_lower:
-            return "PADDY_PR106"
+            return "PAD-PR106"
         # default to wheat if wheat mentioned or fallback
-        return "WHEAT_SHARBAT"
+        return "WHEAT-SHAR"
 
     def _extract_quantity(self, text: str) -> float:
         match = re.search(r"(\d+(\.\d+)?)\s*(qtl|quintal|quintals|ton|tons|mt)", text.lower())
@@ -183,3 +183,4 @@ class RuleBasedLLMProvider(BaseLLMProvider):
 
     def generate(self, prompt: str) -> str:
         return f"Market Intelligence Advisory: {prompt[:100]}..."
+
