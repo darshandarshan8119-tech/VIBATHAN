@@ -1,6 +1,6 @@
 // src/assistant/MessageBubble.jsx
-import React from 'react';
-import { User, Sparkles, Bot, ArrowUpRight, Check, Copy } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { User, Sparkles, ArrowUpRight, Volume2, Square } from 'lucide-react';
 import CommodityPriceCard from './cards/CommodityPriceCard';
 import MandiComparisonCard from './cards/MandiComparisonCard';
 import LiquidityCard from './cards/LiquidityCard';
@@ -12,6 +12,27 @@ import TransactionCard from './cards/TransactionCard';
 
 export default function MessageBubble({ message, onAction }) {
   const isUser = message.role === 'user';
+  const [isReading, setIsReading] = useState(false);
+
+  useEffect(() => () => window.speechSynthesis?.cancel(), []);
+
+  const readText = [message.content, message.farmerExplanation].filter(Boolean).join('. ');
+  const toggleReadAloud = () => {
+    if (!('speechSynthesis' in window) || !readText) return;
+    if (isReading) {
+      window.speechSynthesis.cancel();
+      setIsReading(false);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(readText);
+    utterance.lang = /[\u0C80-\u0CFF]/.test(readText) ? 'kn-IN' : 'en-IN';
+    utterance.rate = 0.92;
+    utterance.onend = () => setIsReading(false);
+    utterance.onerror = () => setIsReading(false);
+    setIsReading(true);
+    window.speechSynthesis.speak(utterance);
+  };
 
   // Render Card Based on Card Type
   const renderCard = (card) => {
@@ -78,6 +99,26 @@ export default function MessageBubble({ message, onAction }) {
           {message.card && (
             <div className="mt-3">
               {renderCard(message.card)}
+            </div>
+          )}
+
+          {message.farmerExplanation && (
+            <section className="mt-4 pt-3 border-t border-black/[0.06] text-xs sm:text-sm leading-relaxed text-slate-700">
+              <h4 className="font-heading font-bold text-slate-900 mb-1">What this means for you</h4>
+              <p className="whitespace-pre-wrap">{message.farmerExplanation}</p>
+            </section>
+          )}
+
+          {!isUser && 'speechSynthesis' in window && readText && (
+            <div className="mt-4 pt-3 border-t border-black/[0.06] flex justify-end">
+              <button
+                type="button"
+                onClick={toggleReadAloud}
+                title={isReading ? 'Stop reading' : 'Read aloud'}
+                className="h-8 px-2.5 rounded-md border border-black/[0.08] bg-[#FAF9F5] hover:bg-[#121212] hover:text-white text-slate-700 text-[11px] font-medium transition-colors flex items-center gap-1.5">
+                {isReading ? <Square className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                <span>{isReading ? 'Stop reading' : 'Read aloud'}</span>
+              </button>
             </div>
           )}
 

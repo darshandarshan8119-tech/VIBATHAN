@@ -10,6 +10,7 @@ from ai.forecasting.seed_historical_tickers import seed_historical_ticker_series
 from analytics.liquidity_analysis import analyze_market_liquidity
 from analytics.mandi_comparison import compare_regional_mandis
 from analytics.profit_calculator import calculate_net_profit
+from ai.tools.market_tools import compare_mandis, get_sell_wait_recommendation
 from bookings.models import DeliverySlot
 from bookings.services import create_slot_booking_atomic
 from mandi.models import APMC, Commodity
@@ -67,6 +68,31 @@ def test_market_analytics_and_forecast_use_persisted_tickers(market_catalog):
 
 
 @pytest.mark.django_db
+def test_sell_wait_and_buy_comparison_are_data_backed(market_catalog):
+    _, commodity = market_catalog
+    seed_historical_ticker_series(90)
+    decision = get_sell_wait_recommendation(commodity.code, "Test APMC", 14, 100)
+    assert decision["currentPrice"] > 0
+    assert decision["predictedPrice"] > 0
+    assert decision["estimatedDifferenceForQuantity"] == decision["priceDifferencePerQuintal"] * 100
+
+    buying = compare_mandis(commodity.code, 100, "buy")
+    quotes = [mandi["quotedRate"] for mandi in buying["mandis"]]
+    assert buying["tradeIntent"] == "buy"
+    assert quotes == sorted(quotes)
+
+
+@pytest.mark.django_db
+def test_unknown_crop_uses_labeled_demo_comparison_data():
+    buying = compare_mandis("ragi", 100, "buy")
+    selling = compare_mandis("ragi", 100, "sell")
+    assert buying["isMockData"] is True
+    assert "Demo" in buying["dataNotice"]
+    assert buying["mandis"][0]["quotedRate"] == min(row["quotedRate"] for row in buying["mandis"])
+    assert selling["mandis"][0]["estimatedNetProceeds"] == max(row["estimatedNetProceeds"] for row in selling["mandis"])
+
+
+@pytest.mark.django_db
 def test_slot_booking_capacity_is_atomic(farmer, market_catalog):
     apmc, commodity = market_catalog
     slot = DeliverySlot.objects.create(
@@ -81,9 +107,10 @@ def test_slot_booking_capacity_is_atomic(farmer, market_catalog):
 
 
 @pytest.mark.django_db
-def test_assistant_chat_returns_a_comparison_card(farmer, market_catalog):
+def test_assistant_chat_returns_a_comparison_card(farmer, market_catalog, monkeypatch):
     _, commodity = market_catalog
     seed_historical_ticker_series(90)
+    monkeypatch.setenv("LLM_PROVIDER", "rule_based")
     client = APIClient()
     client.force_authenticate(farmer)
     response = client.post(
@@ -95,6 +122,7 @@ def test_assistant_chat_returns_a_comparison_card(farmer, market_catalog):
     assert response.status_code == 201
     assert response.data["message"]["card_type"] == "comparison"
     assert response.data["message"]["card_data"]["mandis"]
+    assert response.data["farmer_explanation"]
 
 
 @pytest.mark.django_db

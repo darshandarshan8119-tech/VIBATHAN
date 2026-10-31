@@ -30,7 +30,11 @@ export default function BookingCard({ data, onAction }) {
       setActiveBookingId(generatedId);
       setConfirmed(true);
       setIsSubmitting(false);
-      confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
+      try {
+        confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
+      } catch (err) {
+        // safe fallback if canvas is not initialized
+      }
       if (onAction) {
         onAction('SLOT_CONFIRMED', { bookingId: generatedId, mandi, date, timeSlot, commodity, quantity });
       }

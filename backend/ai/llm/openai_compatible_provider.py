@@ -102,6 +102,7 @@ class OpenAICompatibleProvider(BaseLLMProvider):
                     except Exception:
                         args_dict = {}
                     tool_calls.append({
+                        "id": tc.get("id"),
                         "name": fn.get("name"),
                         "arguments": args_dict,
                     })

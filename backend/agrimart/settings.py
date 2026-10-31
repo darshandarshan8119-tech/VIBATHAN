@@ -5,6 +5,23 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def load_local_env() -> None:
+    """Load only local transport settings without changing security credentials."""
+    env_file = BASE_DIR / ".env"
+    if not env_file.exists():
+        return
+    for line in env_file.read_text(encoding="utf-8").splitlines():
+        if not line or line.lstrip().startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        if key in {"DJANGO_DEBUG", "DJANGO_ALLOWED_HOSTS", "CORS_ALLOWED_ORIGINS"}:
+            os.environ.setdefault(key, value.strip().strip('"').strip("'"))
+
+
+load_local_env()
+
 SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY",
     "django-insecure-agrimart-hybrid-enterprise-backend-secret-key-2026-xyz789-quantum-crypto",
