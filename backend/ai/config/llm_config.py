@@ -28,21 +28,26 @@ class LLMConfig:
     @classmethod
     def from_env(cls) -> "LLMConfig":
         provider = os.getenv("LLM_PROVIDER", "rule_based").strip().lower()
-        api_key = (
-            os.getenv("LLM_API_KEY") 
-            or os.getenv("OPENROUTER_API_KEY")
-            or os.getenv("GEMINI_API_KEY") 
-            or os.getenv("OPENAI_API_KEY")
-        )
         base_url = os.getenv("LLM_BASE_URL")
 
-        if provider == "openrouter" and not base_url:
-            base_url = "https://openrouter.ai/api/v1"
-
-        default_model = "gemini-3.5-flash-lite" if provider == "gemini" else (
-            "meta-llama/llama-3.3-70b-instruct:free" if provider == "openrouter" else "gpt-4o-mini"
-        )
-        model = os.getenv("LLM_MODEL", default_model)
+        if provider == "gemini":
+            api_key = os.getenv("GEMINI_API_KEY") or os.getenv("LLM_API_KEY")
+            model = os.getenv("GEMINI_MODEL") or os.getenv("LLM_MODEL") or "gemini-3.5-flash-lite"
+        elif provider == "openrouter":
+            api_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("LLM_API_KEY")
+            model = os.getenv("OPENROUTER_MODEL") or os.getenv("LLM_MODEL")
+            if not model or model.startswith("gemini-"):
+                model = "meta-llama/llama-3.3-70b-instruct:free"
+            if not base_url:
+                base_url = "https://openrouter.ai/api/v1"
+        else:
+            api_key = (
+                os.getenv("OPENAI_API_KEY")
+                or os.getenv("LLM_API_KEY")
+                or os.getenv("GEMINI_API_KEY")
+                or os.getenv("OPENROUTER_API_KEY")
+            )
+            model = os.getenv("LLM_MODEL", "gpt-4o-mini")
 
         # If provider is configured as an external API but no API key is supplied,
         # fallback safely to 'rule_based' so the app never crashes or hangs

@@ -1,12 +1,16 @@
 """Bounded coordinator that connects LLM tool calls to deterministic engines with strict domain guardrails."""
 
 import json
+import logging
 from typing import Any, Dict, Optional
 
 from ai.agents.guardrails import validate_domain_scope
 from ai.llm.base import ChatMessage
 from ai.llm.provider_factory import get_llm_provider
+from ai.llm.rule_based_provider import RuleBasedLLMProvider
 from ai.tools.market_tools import CARD_TYPES, TOOL_DEFINITIONS, execute_tool
+
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = (
     "You are AgriMart's specialized Agricultural Market Intelligence Copilot for Indian farmers, traders, and FPOs.\n\n"
@@ -51,8 +55,28 @@ class AgentCoordinator:
         latest_card_type = None
         latest_card_data: Dict[str, Any] = {}
 
+        active_provider = self.provider
+
         for _ in range(self.MAX_TOOL_ITERATIONS):
-            response = self.provider.chat(messages, tools=TOOL_DEFINITIONS)
+            try:
+                response = active_provider.chat(messages, tools=TOOL_DEFINITIONS)
+                if (
+                    not isinstance(active_provider, RuleBasedLLMProvider)
+                    and response.content
+                    and any(err in response.content for err in ["encountered an error", "API key not valid", "request failed", "401", "403", "429"])
+                    and not response.tool_calls
+                ):
+                    logger.warning("External LLM error: %s. Falling back to RuleBasedLLMProvider.", response.content[:100])
+                    active_provider = RuleBasedLLMProvider(getattr(self.provider, "config", None))
+                    response = active_provider.chat(messages, tools=TOOL_DEFINITIONS)
+            except Exception as exc:
+                if not isinstance(active_provider, RuleBasedLLMProvider):
+                    logger.warning("External LLM exception: %s. Falling back to RuleBasedLLMProvider.", exc)
+                    active_provider = RuleBasedLLMProvider(getattr(self.provider, "config", None))
+                    response = active_provider.chat(messages, tools=TOOL_DEFINITIONS)
+                else:
+                    raise exc
+
             if not response.tool_calls:
                 return {
                     "content": response.content or "I could not produce a market response.",
