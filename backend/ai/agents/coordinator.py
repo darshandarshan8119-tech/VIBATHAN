@@ -60,7 +60,7 @@ class AgentCoordinator:
                     "card_data": latest_card_data,
                 }
 
-            messages.append(ChatMessage(role="assistant", content=response.content or "", tool_calls=response.tool_calls))
+            messages.append(ChatMessage(role="assistant", content=response.content or "", tool_calls=response.tool_calls, raw_parts=response.raw_parts))
             for tool_call in response.tool_calls:
                 tool_name = tool_call.get("name", "")
                 try:

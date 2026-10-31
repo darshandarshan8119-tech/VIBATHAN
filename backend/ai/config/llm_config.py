@@ -28,13 +28,25 @@ class LLMConfig:
     @classmethod
     def from_env(cls) -> "LLMConfig":
         provider = os.getenv("LLM_PROVIDER", "rule_based").strip().lower()
-        api_key = os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY")
-        model = os.getenv("LLM_MODEL", "gemini-2.5-flash" if provider == "gemini" else "gpt-4o-mini")
+        api_key = (
+            os.getenv("LLM_API_KEY") 
+            or os.getenv("OPENROUTER_API_KEY")
+            or os.getenv("GEMINI_API_KEY") 
+            or os.getenv("OPENAI_API_KEY")
+        )
         base_url = os.getenv("LLM_BASE_URL")
 
-        # If provider is configured as gemini or openai but no API key is supplied,
+        if provider == "openrouter" and not base_url:
+            base_url = "https://openrouter.ai/api/v1"
+
+        default_model = "gemini-3.5-flash-lite" if provider == "gemini" else (
+            "meta-llama/llama-3.3-70b-instruct:free" if provider == "openrouter" else "gpt-4o-mini"
+        )
+        model = os.getenv("LLM_MODEL", default_model)
+
+        # If provider is configured as an external API but no API key is supplied,
         # fallback safely to 'rule_based' so the app never crashes or hangs
-        if provider in {"gemini", "openai"} and not api_key:
+        if provider in {"gemini", "openai", "openrouter", "deepseek", "groq"} and not api_key:
             provider = "rule_based"
 
         return cls(

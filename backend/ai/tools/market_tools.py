@@ -12,7 +12,25 @@ from mandi.models import Commodity, DailyTicker
 
 
 def _commodity_or_default(commodity_code: str) -> Commodity:
-    commodity = Commodity.objects.filter(code=commodity_code).first()
+    if not commodity_code:
+        commodity = Commodity.objects.first()
+        if commodity is None:
+            raise ValueError("No commodities are available for market analysis.")
+        return commodity
+
+    c_clean = str(commodity_code).strip()
+    # 1. Exact code match
+    commodity = Commodity.objects.filter(code__iexact=c_clean).first()
+    # 2. Code contains string (e.g. "wheat" in "WHEAT_SHARBAT")
+    if not commodity:
+        commodity = Commodity.objects.filter(code__icontains=c_clean).first()
+    # 3. Name contains string (e.g. "wheat" in "Wheat (Sharbati)")
+    if not commodity:
+        commodity = Commodity.objects.filter(name__icontains=c_clean).first()
+    # 4. Ticker symbol match
+    if not commodity:
+        commodity = Commodity.objects.filter(ticker_symbol__iexact=c_clean).first()
+    # 5. Fallback to first available
     if commodity is None:
         commodity = Commodity.objects.first()
     if commodity is None:

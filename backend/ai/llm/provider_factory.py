@@ -11,7 +11,7 @@ def get_llm_provider(config: LLMConfig = None) -> BaseLLMProvider:
 
     if config.provider == "gemini" and config.api_key:
         return GeminiProvider(config)
-    elif config.provider in {"openai", "deepseek", "groq", "ollama"} and config.api_key:
+    elif config.provider in {"openai", "openrouter", "deepseek", "groq", "ollama"} and config.api_key:
         return OpenAICompatibleProvider(config)
     else:
         return RuleBasedLLMProvider(config)

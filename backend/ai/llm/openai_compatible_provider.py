@@ -25,10 +25,33 @@ class OpenAICompatibleProvider(BaseLLMProvider):
 
         formatted_msgs = []
         for msg in messages:
-            formatted_msgs.append({
-                "role": msg.role,
-                "content": msg.content,
-            })
+            if msg.role == "tool":
+                formatted_msgs.append({
+                    "role": "tool",
+                    "content": msg.content,
+                    "tool_call_id": msg.tool_call_id or "call_0",
+                })
+            elif msg.role in {"assistant", "model"} and msg.tool_calls:
+                formatted_msgs.append({
+                    "role": "assistant",
+                    "content": msg.content or "",
+                    "tool_calls": [
+                        {
+                            "id": tc.get("id", msg.tool_call_id or "call_0"),
+                            "type": "function",
+                            "function": {
+                                "name": tc["name"],
+                                "arguments": json.dumps(tc.get("arguments", {})) if isinstance(tc.get("arguments"), dict) else str(tc.get("arguments", "{}")),
+                            }
+                        }
+                        for tc in msg.tool_calls
+                    ]
+                })
+            else:
+                formatted_msgs.append({
+                    "role": msg.role,
+                    "content": msg.content,
+                })
 
         payload: Dict[str, Any] = {
             "model": self.model,
@@ -53,6 +76,8 @@ class OpenAICompatibleProvider(BaseLLMProvider):
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
+            "HTTP-Referer": "http://localhost:5173",
+            "X-Title": "AgriMart Market Intelligence",
         }
 
         req = urllib.request.Request(

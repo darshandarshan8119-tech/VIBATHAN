@@ -36,15 +36,50 @@ class GeminiProvider(BaseLLMProvider):
 
         contents = []
         for msg in messages:
-            role = "user" if msg.role in {"user", "system"} else "model"
             if msg.role == "tool":
+                try:
+                    resp_obj = json.loads(msg.content) if isinstance(msg.content, str) else msg.content
+                    if not isinstance(resp_obj, dict):
+                        resp_obj = {"result": resp_obj}
+                except Exception:
+                    resp_obj = {"result": msg.content}
+
                 contents.append({
-                    "role": "function",
-                    "parts": [{"functionResponse": {"name": msg.tool_call_id or "tool", "response": {"result": msg.content}}}]
+                    "role": "user",
+                    "parts": [{
+                        "functionResponse": {
+                            "name": msg.tool_call_id or "tool",
+                            "response": {"output": resp_obj}
+                        }
+                    }]
                 })
+            elif msg.role in {"assistant", "model"}:
+                if msg.raw_parts:
+                    contents.append({
+                        "role": "model",
+                        "parts": msg.raw_parts
+                    })
+                else:
+                    parts = []
+                    if msg.content:
+                        parts.append({"text": msg.content})
+                    if msg.tool_calls:
+                        for tc in msg.tool_calls:
+                            parts.append({
+                                "functionCall": {
+                                    "name": tc["name"],
+                                    "args": tc.get("arguments", {})
+                                }
+                            })
+                    if not parts:
+                        parts = [{"text": ""}]
+                    contents.append({
+                        "role": "model",
+                        "parts": parts
+                    })
             else:
                 contents.append({
-                    "role": role,
+                    "role": "user",
                     "parts": [{"text": msg.content}]
                 })
 
@@ -95,9 +130,15 @@ class GeminiProvider(BaseLLMProvider):
                     tool_calls=tool_calls,
                     finish_reason=candidate.get("finishReason", "stop"),
                     raw_response=result,
+                    raw_parts=parts,
                 )
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode("utf-8")
+            return LLMResponse(
+                content=f"Gemini API request encountered an error: {e.code} - {err_body}",
+                finish_reason="error",
+            )
         except Exception as e:
-            # Fallback gracefully
             return LLMResponse(
                 content=f"Gemini API request encountered an error: {str(e)}",
                 finish_reason="error",

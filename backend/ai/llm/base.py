@@ -9,6 +9,7 @@ class ChatMessage:
     content: str
     tool_calls: Optional[List[Dict[str, Any]]] = None
     tool_call_id: Optional[str] = None
+    raw_parts: Optional[Any] = None
 
 
 @dataclass
@@ -24,6 +25,7 @@ class LLMResponse:
     tool_calls: List[Dict[str, Any]] = field(default_factory=list)
     finish_reason: str = "stop"
     raw_response: Optional[Any] = None
+    raw_parts: Optional[Any] = None
 
 
 class BaseLLMProvider(ABC):
