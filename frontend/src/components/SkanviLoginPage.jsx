@@ -153,21 +153,16 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
         {/* LEFT COLUMN: Clean Minimalist Scandinavian Authentication Form (6 Cols) */}
         <div className="lg:col-span-6 flex flex-col justify-center max-w-lg mx-auto w-full space-y-6">
           
-          {/* Headline & Breadcrumb */}
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5F4F0] border border-black/[0.06] text-[10px] font-mono font-bold text-[#C26747] uppercase tracking-wider">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#C26747]"></span>
-              <span>National APMC Terminal Access</span>
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl font-extrabold font-heading text-[#121212] tracking-tight leading-tight">
-              {authMode === 'login' ? 'Sign In to Market Terminal' : 'Register Member Account'}
+          {/* Headline */}
+          <div className="space-y-1.5">
+            <h1 className="text-3xl sm:text-4xl font-extrabold font-heading text-[#121212] tracking-tight">
+              {authMode === 'login' ? 'Sign In' : 'Create Account'}
             </h1>
 
-            <p className="text-xs sm:text-sm text-[#5A5A5A] font-sans leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#5A5A5A] font-sans">
               {authMode === 'login' 
-                ? 'Direct access to verified APMC mandi prices, live order book, wholesale lot auctions, and T+0 escrow settlements.'
-                : 'Create an authorized member account for Kisan crop liquidation or institutional merchant procurement.'}
+                ? 'Enter your credentials to access the market terminal.' 
+                : 'Register to access real-time mandi intelligence.'}
             </p>
           </div>
 
@@ -176,7 +171,7 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
             <button
               type="button"
               onClick={() => { setAuthMode('login'); setErrorMessage(''); }}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold font-heading transition-all ${
+              className={`flex-1 py-2 rounded-xl text-xs font-bold font-heading transition-all cursor-pointer ${
                 authMode === 'login' ? 'bg-[#121212] text-white shadow-xs' : 'text-[#6B6A66] hover:text-[#121212]'
               }`}>
               Sign In
@@ -184,7 +179,7 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
             <button
               type="button"
               onClick={() => { setAuthMode('register'); setErrorMessage(''); }}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold font-heading transition-all ${
+              className={`flex-1 py-2 rounded-xl text-xs font-bold font-heading transition-all cursor-pointer ${
                 authMode === 'register' ? 'bg-[#121212] text-white shadow-xs' : 'text-[#6B6A66] hover:text-[#121212]'
               }`}>
               Create New Account
@@ -206,7 +201,7 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
               {/* Input / Mobile / Email */}
               <div>
                 <label className="block text-[#121212] font-bold mb-1.5 font-heading">
-                  Mobile Number or Email ID:
+                  Mobile or Email
                 </label>
                 <div className="relative flex items-center">
                   <input 
@@ -215,21 +210,20 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
                     autoComplete="username"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="e.g. 9876543210 or trader@rajkotmandi.com"
+                    placeholder="9876543210 or name@example.com"
                     className="w-full bg-white border border-black/[0.1] rounded-2xl px-4 py-3 text-sm text-[#121212] font-medium shadow-xs focus:outline-none focus:border-[#121212] transition-colors"
                   />
                 </div>
               </div>
 
               {/* Toggle OTP vs Password */}
-              <div className="flex items-center justify-between text-xs pt-0.5">
+              <div className="flex items-center justify-end text-xs pt-0.5">
                 <button
                   type="button"
                   onClick={() => setUseOtp(!useOtp)}
-                  className="text-[#C26747] hover:underline font-bold font-heading">
-                  {useOtp ? 'Prefer Password Login?' : 'Prefer Quick Mobile OTP?'}
+                  className="text-[#C26747] hover:underline font-bold font-heading cursor-pointer">
+                  {useOtp ? 'Use Password' : 'Login with Mobile OTP'}
                 </button>
-                <span className="text-[#8E8E8E] text-[11px]">Instant &amp; Secure JWT</span>
               </div>
 
               {/* OTP or Password Field */}
@@ -239,14 +233,14 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
                     <button
                       type="button"
                       onClick={handleSendOtp}
-                      className="w-full py-3 rounded-2xl bg-[#F5F4F0] hover:bg-[#EBE8E2] border border-black/[0.08] text-[#121212] font-bold font-heading transition-colors">
-                      Send 4-Digit OTP to Mobile
+                      className="w-full py-3 rounded-2xl bg-[#F5F4F0] hover:bg-[#EBE8E2] border border-black/[0.08] text-[#121212] font-bold font-heading transition-colors cursor-pointer">
+                      Send 4-Digit OTP
                     </button>
                   ) : (
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[#121212] font-bold font-heading">Enter 4-Digit OTP:</label>
-                        <span className="text-[10px] text-[#10B981] font-mono font-bold">Demo OTP: 5824</span>
+                        <label className="text-[#121212] font-bold font-heading">Enter 4-Digit OTP</label>
+                        <span className="text-[10px] text-[#10B981] font-mono font-bold">Demo: 5824</span>
                       </div>
                       <input 
                         type="text"
@@ -264,7 +258,7 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
               ) : (
                 <div>
                   <label className="block text-[#121212] font-bold mb-1.5 font-heading">
-                    Password:
+                    Password
                   </label>
                   <input 
                     type="password"
@@ -282,12 +276,12 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-full bg-[#121212] hover:bg-[#283618] text-white font-extrabold text-xs font-heading shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                className="w-full py-3.5 rounded-full bg-[#121212] hover:bg-[#C26747] text-white font-extrabold text-xs sm:text-sm font-heading shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer">
                 {isLoading ? (
                   <span className="animate-spin">⌛</span>
                 ) : (
                   <>
-                    <span>Enter Market Intelligence Terminal</span>
+                    <span>Sign In</span>
                     <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                   </>
                 )}
@@ -303,21 +297,21 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[#121212] font-bold mb-1 font-heading">
-                    Full Legal Name:
+                    Full Name
                   </label>
                   <input 
                     type="text"
                     required
                     value={regFullName}
                     onChange={(e) => setRegFullName(e.target.value)}
-                    placeholder="e.g. Vikramaditya Patel"
+                    placeholder="e.g. Vikram Patel"
                     className="w-full bg-white border border-black/[0.1] rounded-xl px-3 py-2.5 text-xs text-[#121212] font-medium shadow-xs focus:outline-none focus:border-[#121212]"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[#121212] font-bold mb-1 font-heading">
-                    Mobile Number (10 Digits):
+                    Mobile Number
                   </label>
                   <input 
                     type="tel"
@@ -332,7 +326,7 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
 
               <div>
                 <label className="block text-[#121212] font-bold mb-1 font-heading">
-                  Set Secure Password (min 8 chars):
+                  Password
                 </label>
                 <input 
                   type="password"
@@ -347,20 +341,20 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[#121212] font-bold mb-1 font-heading">
-                    Terminal Role:
+                    Account Role
                   </label>
                   <select
                     value={regRole}
                     onChange={(e) => setRegRole(e.target.value)}
                     className="w-full bg-white border border-black/[0.1] rounded-xl px-3 py-2.5 text-xs font-semibold text-[#121212] focus:outline-none focus:border-[#121212]">
-                    <option value="farmer">Farmer / Kisan Cultivator</option>
+                    <option value="farmer">Farmer / Kisan</option>
                     <option value="merchant">Merchant / APMC Trader</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-[#121212] font-bold mb-1 font-heading">
-                    Mandi / Village Pincode:
+                    Pincode
                   </label>
                   <input 
                     type="text"
@@ -377,7 +371,7 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
               {regRole === 'farmer' ? (
                 <div>
                   <label className="block text-[#121212] font-bold mb-1 font-heading">
-                    Farm Cultivation Acreage:
+                    Acreage (Acres)
                   </label>
                   <input 
                     type="number"
@@ -391,7 +385,7 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
               ) : (
                 <div>
                   <label className="block text-[#121212] font-bold mb-1 font-heading">
-                    Company / Trading Firm Name:
+                    Firm Name
                   </label>
                   <input 
                     type="text"
@@ -407,12 +401,12 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-full bg-[#121212] hover:bg-[#283618] text-white font-extrabold text-xs font-heading shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-2">
+                className="w-full py-3.5 rounded-full bg-[#121212] hover:bg-[#C26747] text-white font-extrabold text-xs sm:text-sm font-heading shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-2 cursor-pointer">
                 {isLoading ? (
                   <span className="animate-spin">⌛</span>
                 ) : (
                   <>
-                    <span>Complete Registration &amp; Open Terminal</span>
+                    <span>Create Account</span>
                     <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                   </>
                 )}
@@ -422,41 +416,22 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
           )}
 
           {/* 1-Click Instant Demo Testing Buttons */}
-          <div className="p-3.5 rounded-2xl bg-[#F5F4F0] border border-black/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <span className="text-[10px] font-mono uppercase text-[#8E8E8E] font-bold block">Developer &amp; Auditor Sandbox</span>
-              <span className="text-xs font-bold text-[#121212] font-heading">Instant 1-Click Verification:</span>
-            </div>
+          <div className="p-3 rounded-2xl bg-[#F5F4F0] border border-black/[0.05] flex items-center justify-between gap-3">
+            <span className="text-xs font-semibold text-[#6E6E6E]">1-Click Demo:</span>
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => handleFastDemoLogin('farmer')}
-                className="px-3 py-1.5 rounded-full bg-white hover:bg-black hover:text-white border border-black/[0.1] text-[11px] font-bold font-heading transition-all shadow-xs shrink-0">
-                🌾 Kisan Member
+                className="px-3.5 py-1.5 rounded-full bg-white hover:bg-black hover:text-white border border-black/[0.1] text-xs font-bold font-heading transition-all shadow-xs shrink-0 cursor-pointer">
+                🌾 Kisan
               </button>
               <button
                 type="button"
                 onClick={() => handleFastDemoLogin('merchant')}
-                className="px-3 py-1.5 rounded-full bg-white hover:bg-black hover:text-white border border-black/[0.1] text-[11px] font-bold font-heading transition-all shadow-xs shrink-0">
-                🏢 APMC Merchant
+                className="px-3.5 py-1.5 rounded-full bg-white hover:bg-black hover:text-white border border-black/[0.1] text-xs font-bold font-heading transition-all shadow-xs shrink-0 cursor-pointer">
+                🏢 Merchant
               </button>
-            </div>
-          </div>
-
-          {/* Core Market Platform Capabilities */}
-          <div className="grid grid-cols-3 gap-3 pt-3 border-t border-black/[0.06] text-[11px] text-[#5A5A5A]">
-            <div className="flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-[#C26747] shrink-0" />
-              <span>Live APMC Radar</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Scale className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
-              <span>5-Level Depth Book</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#121212] shrink-0" />
-              <span>T+0 Escrow Clearing</span>
             </div>
           </div>
 
@@ -473,14 +448,11 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
 
           {/* Editorial Photographic Caption */}
           <div className="absolute inset-x-6 bottom-6 sm:inset-x-8 sm:bottom-8 text-white space-y-1">
-            <span className="text-[10px] font-mono tracking-[0.25em] text-[#D4A373] uppercase font-bold block">
-              Market Intelligence 2026 &bull; APMC e-NAM Compatible
-            </span>
-            <h3 className="text-xl font-extrabold font-heading text-white leading-snug">
-              Democratizing Mandi Price Discovery for Bharat.
+            <h3 className="text-xl sm:text-2xl font-extrabold font-heading text-white leading-snug">
+              Democratizing Mandi Price Discovery.
             </h3>
-            <p className="text-xs text-white/80 font-sans max-w-md">
-              Real-time AGMARKNET modal rates, 5-level order depth, transparent assay moisture deductions, and guaranteed electronic escrow settlements.
+            <p className="text-xs text-white/80 font-sans max-w-sm">
+              Real-time APMC rates, order depth, and secure escrow settlements.
             </p>
           </div>
         </div>

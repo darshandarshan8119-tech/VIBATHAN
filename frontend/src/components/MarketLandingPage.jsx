@@ -1,5 +1,5 @@
 // src/components/MarketLandingPage.jsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Scale, ArrowRight, ShieldCheck, Check, Sparkles, Lock, ArrowUpRight, 
   TrendingUp, TrendingDown, Building2, Landmark, CheckCircle2, Activity,
@@ -16,6 +16,42 @@ export default function MarketLandingPage({ onEnterPlatform }) {
   
   // Interactive Hero Preview Tab: 'radar' | 'copilot' | 'depth'
   const [heroTab, setHeroTab] = useState('radar');
+
+  // Looping Typewriter Effect for Hero Headline Subtitle
+  const typewriterPhrases = [
+    "Autonomous AI copilot ranking mandis by net in-hand cash proceeds.",
+    "Real-time 5-level order depth & verified institutional buyer matching.",
+    "Instant APMC gate delivery booking with guaranteed T+0 escrow settlement.",
+    "Eliminating asymmetric middleman cuts with verified live mandi intelligence."
+  ];
+
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [displayText, setDisplayText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const currentPhrase = typewriterPhrases[phraseIndex];
+    const typingSpeed = isDeleting ? 22 : 45;
+
+    if (!isDeleting && displayText === currentPhrase) {
+      const timeout = setTimeout(() => setIsDeleting(true), 2400);
+      return () => clearTimeout(timeout);
+    } else if (isDeleting && displayText === '') {
+      setIsDeleting(false);
+      setPhraseIndex((prev) => (prev + 1) % typewriterPhrases.length);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setDisplayText(
+        isDeleting
+          ? currentPhrase.substring(0, displayText.length - 1)
+          : currentPhrase.substring(0, displayText.length + 1)
+      );
+    }, typingSpeed);
+
+    return () => clearTimeout(timeout);
+  }, [displayText, isDeleting, phraseIndex]);
 
   const handleMouseMove = (e) => {
     if (!cardRef.current) return;
@@ -71,15 +107,6 @@ export default function MarketLandingPage({ onEnterPlatform }) {
             </span>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-[#5A5A5A] font-heading">
-            <a href="#live-radar" className="hover:text-[#121212] transition-colors">Live APMC Radar</a>
-            <a href="#copilot-preview" className="hover:text-[#121212] transition-colors">AI Copilot</a>
-            <a href="#core-capabilities" className="hover:text-[#121212] transition-colors">5-Level Depth</a>
-            <a href="#infrastructure" className="hover:text-[#121212] transition-colors">Logistics &amp; Godowns</a>
-            <a href="#clearing" className="hover:text-[#121212] transition-colors">Escrow Clearing</a>
-          </nav>
-
           {/* Primary Action Button */}
           <button
             onClick={() => onEnterPlatform()}
@@ -103,37 +130,18 @@ export default function MarketLandingPage({ onEnterPlatform }) {
             <span>AGENTIC COMMODITY INTELLIGENCE &bull; VIBEATHON 2026</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold font-heading tracking-tight leading-[1.08] text-[#121212]">
-            Conversational Agri-Market Intelligence.<br />
-            <span className="text-[#C26747]">Live APMC Price Discovery</span> &amp; T+0 Escrow.
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold font-heading tracking-tight leading-[1.08] text-[#121212] animate-smooth-upward">
+            Agri-Market Intelligence.<br />
+            <span className="text-[#C26747]">Live Prices</span> &amp; Instant Escrow.
           </h1>
 
-          <p className="text-sm sm:text-base text-[#5A5A5A] font-sans leading-relaxed max-w-2xl">
-            Empowering Bharat's farmers with an autonomous AI copilot that ranks regional mandis by net in-hand cash proceeds, executes 5-level order depth analysis, matches verified institutional buyers, and books gate delivery slots in seconds.
-          </p>
-
-          {/* Quick AI Intent Pills */}
-          <div className="pt-2">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#8E8E8E] block mb-2">
-              Try Natural Language Inquiries:
-            </span>
-            <div className="flex flex-wrap items-center gap-2">
-              {[
-                { label: '🌾 Compare 100 Qtl Wheat across Ludhiana & Karnal', action: () => onEnterPlatform() },
-                { label: '📊 5-Level Depth & Buyer Spread for Mustard', action: () => onEnterPlatform() },
-                { label: '🚚 Book APMC Gate Slot for PB-10 Vehicle', action: () => onEnterPlatform() },
-                { label: '📈 14-Day Price Forecast with 95% Confidence Bounds', action: () => onEnterPlatform() },
-              ].map((chip, idx) => (
-                <button
-                  key={idx}
-                  onClick={chip.action}
-                  className="px-3.5 py-1.5 rounded-full bg-[#F5F4F0] hover:bg-[#EBE8E2] border border-black/[0.06] text-xs font-medium text-[#121212] transition-all hover:scale-[1.02] flex items-center gap-1.5 cursor-pointer">
-                  <span>{chip.label}</span>
-                  <ArrowUpRight className="w-3 h-3 text-[#C26747]" />
-                </button>
-              ))}
-            </div>
+          <div className="min-h-[50px] sm:min-h-[44px] flex items-center max-w-2xl">
+            <p className="text-sm sm:text-base text-[#5A5A5A] font-sans leading-relaxed">
+              <span>{displayText}</span>
+              <span className="inline-block w-[2px] h-[1.1em] ml-1 bg-[#C26747] align-middle animate-cursor-blink" />
+            </p>
           </div>
+
 
           {/* CTA Buttons & Social Proof */}
           <div className="flex flex-wrap items-center gap-4 pt-3">
@@ -448,44 +456,44 @@ export default function MarketLandingPage({ onEnterPlatform }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             {/* 1. AGMARKNET Benchmark */}
-            <div className="bg-white p-6 rounded-3xl border border-black/[0.06] shadow-xs space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#C26747]/10 flex items-center justify-center text-[#C26747]">
+            <div className="float-feature-card float-feature-1 bg-white p-6 rounded-3xl border border-[#C26747]/20 hover:border-[#C26747]/60 space-y-3 cursor-pointer group">
+              <div className="w-10 h-10 rounded-2xl bg-[#C26747]/10 flex items-center justify-center text-[#C26747] group-hover:scale-110 transition-transform">
                 <Scale className="w-5 h-5" />
               </div>
-              <h3 className="font-heading font-bold text-base text-[#121212]">AGMARKNET Benchmark</h3>
+              <h3 className="font-heading font-bold text-base text-[#121212] group-hover:text-[#C26747] transition-colors">AGMARKNET Benchmark</h3>
               <p className="text-xs text-[#5A5A5A] leading-relaxed">
                 Direct statutory modal rates from official central APMC feeds, establishing fair benchmark minimums before bidding starts.
               </p>
             </div>
 
             {/* 2. Five-Level Market Depth */}
-            <div className="bg-white p-6 rounded-3xl border border-black/[0.06] shadow-xs space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+            <div className="float-feature-card float-feature-2 bg-white p-6 rounded-3xl border border-emerald-500/20 hover:border-emerald-500/60 space-y-3 cursor-pointer group">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
                 <BarChart2 className="w-5 h-5" />
               </div>
-              <h3 className="font-heading font-bold text-base text-[#121212]">5-Level Depth &amp; Spread</h3>
+              <h3 className="font-heading font-bold text-base text-[#121212] group-hover:text-emerald-600 transition-colors">5-Level Depth &amp; Spread</h3>
               <p className="text-xs text-[#5A5A5A] leading-relaxed">
                 Complete visibility of top 5 merchant bids and farmer asks, real-time bid/ask spread, and last traded price (LTP) analytics.
               </p>
             </div>
 
             {/* 3. Moisture Assay Deductions */}
-            <div className="bg-white p-6 rounded-3xl border border-black/[0.06] shadow-xs space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+            <div className="float-feature-card float-feature-3 bg-white p-6 rounded-3xl border border-amber-500/20 hover:border-amber-500/60 space-y-3 cursor-pointer group">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
                 <Activity className="w-5 h-5" />
               </div>
-              <h3 className="font-heading font-bold text-base text-[#121212]">Transparent Moisture Assays</h3>
+              <h3 className="font-heading font-bold text-base text-[#121212] group-hover:text-amber-600 transition-colors">Transparent Moisture Assays</h3>
               <p className="text-xs text-[#5A5A5A] leading-relaxed">
                 Standardized basis moisture bands with algorithmic price deduction rates per excess percentage point. Zero arbitrary price cuts.
               </p>
             </div>
 
             {/* 4. T+0 Escrow Clearing */}
-            <div className="bg-white p-6 rounded-3xl border border-black/[0.06] shadow-xs space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600">
+            <div className="float-feature-card float-feature-4 bg-white p-6 rounded-3xl border border-blue-500/20 hover:border-blue-500/60 space-y-3 cursor-pointer group">
+              <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <h3 className="font-heading font-bold text-base text-[#121212]">T+0 Escrow Settlement</h3>
+              <h3 className="font-heading font-bold text-base text-[#121212] group-hover:text-blue-600 transition-colors">T+0 Escrow Settlement</h3>
               <p className="text-xs text-[#5A5A5A] leading-relaxed">
                 Secured bank escrow quarantine for buyer funds, programmatic APMC cess calculation, and automated RTGS payout to farmers upon gate weighment.
               </p>
@@ -525,9 +533,10 @@ export default function MarketLandingPage({ onEnterPlatform }) {
                   {item.tag}
                 </span>
               </div>
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-2">
-                <h4 className="font-heading font-bold text-sm text-[#121212]">{item.title}</h4>
-                <p className="text-xs text-[#5A5A5A] leading-relaxed">{item.description}</p>
+              <div className="p-4 sm:p-5 flex items-center">
+                <h4 className="font-heading font-bold text-sm sm:text-base text-[#121212] group-hover:text-[#C26747] transition-colors">
+                  {item.title}
+                </h4>
               </div>
             </div>
           ))}
@@ -535,28 +544,59 @@ export default function MarketLandingPage({ onEnterPlatform }) {
       </section>
 
       {/* CTA BANNER */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-8 pb-20" id="clearing">
-        <div className="rounded-3xl bg-[#121212] text-white p-8 sm:p-14 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="space-y-3 max-w-xl z-10">
-            <span className="text-[11px] font-mono uppercase text-[#D4A373] tracking-widest font-bold">
-              Kisan &bull; APMC Merchant &bull; FPO Clearing
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold font-heading tracking-tight text-white">
-              Ready to trade on Bharat's most transparent commodity exchange?
+      <section className="max-w-[1240px] mx-auto px-4 sm:px-8 pb-20" id="clearing">
+        <div className="relative rounded-3xl bg-gradient-to-br from-[#1C1815] via-[#121110] to-[#251A14] border border-white/[0.12] p-8 sm:p-12 lg:p-14 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5),0_12px_32px_-8px_rgba(194,103,71,0.22)] overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          
+          {/* Ambient Glowing Gradient Orbs */}
+          <div className="absolute -top-24 -right-24 w-80 h-80 bg-gradient-to-br from-[#C26747]/25 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-20 w-72 h-72 bg-gradient-to-tr from-[#D4A373]/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(194,103,71,0.12),transparent_55%)] pointer-events-none" />
+
+          {/* Left Text Column */}
+          <div className="space-y-4 max-w-xl z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.06] border border-white/[0.12] backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D4A373] animate-pulse" />
+              <span className="text-[10px] font-mono uppercase text-[#D4A373] tracking-wider font-bold">
+                Kisan &bull; APMC Merchant &bull; FPO Clearing
+              </span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl lg:text-[2.35rem] font-extrabold font-heading tracking-tight leading-[1.15] text-white">
+              Ready to trade on Bharat's{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F4A261] via-[#E76F51] to-[#D4A373]">
+                most transparent
+              </span>{' '}
+              commodity exchange?
             </h2>
-            <p className="text-xs sm:text-sm text-white/70">
-              Access real-time APMC arrivals, submit auction lots with guaranteed reserve prices, or place institutional bids with certified laboratory assays.
+
+            <p className="text-xs sm:text-sm text-white/70 leading-relaxed max-w-lg">
+              Access real-time APMC arrivals, submit auction lots with guaranteed reserve prices, and place institutional bids with certified laboratory assays.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto shrink-0 z-10">
+          {/* Right Action Column */}
+          <div className="flex flex-col sm:items-start lg:items-end gap-3.5 shrink-0 z-10">
             <button
               onClick={() => onEnterPlatform()}
-              className="px-6 py-4 rounded-full bg-[#C26747] hover:bg-[#D35400] text-white font-extrabold text-xs font-heading shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer">
-              <Bot className="w-4 h-4 stroke-[2] text-[#D4A373]" />
+              className="group px-7 py-4 rounded-full bg-gradient-to-r from-[#C26747] via-[#D35400] to-[#E07A5F] hover:from-[#D35400] hover:to-[#C26747] text-white font-extrabold text-xs sm:text-sm font-heading shadow-[0_12px_28px_-6px_rgba(194,103,71,0.5)] hover:shadow-[0_18px_36px_-6px_rgba(194,103,71,0.65)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer">
+              <Bot className="w-4 h-4 text-[#FDEBD0] group-hover:rotate-12 transition-transform" />
               <span>Launch AI Market Copilot</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
+
+            <div className="flex items-center gap-3 text-[11px] font-mono text-white/50 pt-1">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>Instant T+0 Escrow</span>
+              </span>
+              <span>&bull;</span>
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#D4A373] shrink-0" />
+                <span>100% Verified APMC</span>
+              </span>
+            </div>
           </div>
+
         </div>
       </section>
 
