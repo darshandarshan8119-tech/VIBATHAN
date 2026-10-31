@@ -60,6 +60,12 @@ class RuleBasedLLMProvider(BaseLLMProvider):
                 finish_reason="stop",
             )
 
+        # Domain Guardrail Check
+        from ai.agents.guardrails import validate_domain_scope
+        is_valid, refusal_msg = validate_domain_scope(last_message.content)
+        if not is_valid:
+            return LLMResponse(content=refusal_msg, finish_reason="stop")
+
         user_text = last_message.content.lower()
 
         # Check if tools are provided to call

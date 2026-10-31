@@ -115,3 +115,34 @@ def test_internal_escrow_lifecycle_is_sequential(farmer, merchant, market_catalo
     transaction.refresh_from_db()
     assert transaction.status == MarketTransaction.LifecycleStatus.FUNDS_RELEASED
     assert transaction.lifecycle_events.count() == 5
+
+
+@pytest.mark.django_db
+def test_assistant_chat_rejects_out_of_domain_coding_queries(farmer):
+    client = APIClient()
+    client.force_authenticate(farmer)
+
+    # 1. Reject coding query
+    response = client.post(
+        "/api/v1/assistant/chat/",
+        {"message": "Can you write Java code to reverse a binary tree?"},
+        format="json",
+        secure=True,
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert "AgriMart's Agricultural Market Intelligence Copilot" in data["message"]["content"]
+    assert "cannot assist with programming" in data["message"]["content"]
+    assert data["message"]["card_type"] is None
+    assert data["message"]["card_data"] == {}
+
+    # 2. Reject non-agricultural general trivia
+    response2 = client.post(
+        "/api/v1/assistant/chat/",
+        {"message": "Who was Napoleon and which movies were made about him?"},
+        format="json",
+        secure=True,
+    )
+    assert response2.status_code == 201
+    assert "AgriMart's Agricultural Market Intelligence Copilot" in response2.json()["message"]["content"]
+    assert response2.json()["message"]["card_type"] is None

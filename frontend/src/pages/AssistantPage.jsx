@@ -75,6 +75,37 @@ export default function AssistantPage({
 
     const lower = text.toLowerCase();
 
+    // 0. DOMAIN GUARDRAILS: Strictly reject out-of-scope inquiries (coding, trivia, creative writing)
+    const outOfScopePatterns = [
+      /\b(write|create|generate|show|debug|fix)\s+([a-z\s]+)?(code|script|program|function|class|method|snippet|query|api)\b/i,
+      /\b(java|python|javascript|typescript|c\+\+|golang|rust|php|ruby|swift|kotlin|c#|html|css|sql|bash|powershell|regex|leetcode|algorithm)\b/i,
+      /\b(write|compose)\s+(a\s+)?(poem|song|story|essay|novel|joke|rap|haiku)\b/i,
+      /\b(who\s+is|who\s+was|tell\s+me\s+about)\s+(napoleon|einstein|shakespeare|messi|ronaldo|batman|superman)\b/i,
+      /\b(president|prime minister|election|parliament|democrat|republican|movie|actor|bollywood|hollywood)\b/i,
+    ];
+
+    const isOutOfDomain = outOfScopePatterns.some(pattern => pattern.test(lower));
+    if (isOutOfDomain) {
+      setTimeout(() => {
+        setIsLoading(false);
+        setAgentActivity(null);
+
+        const refusalMsg = {
+          id: `asst-${Date.now()}`,
+          role: 'assistant',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          content: `I am AgriMart's Agricultural Market Intelligence Copilot. My capabilities are strictly dedicated to Indian APMC agricultural commodity pricing, mandi comparison, 5-level order depth, price trajectory forecasting, delivery slot reservations, and trade settlement.\n\nI cannot assist with programming, code generation, or non-agricultural topics.\n\n🌾 **You can ask me:**\n• *"What is the modal price of Wheat in Ludhiana APMC?"*\n• *"Compare net proceeds for 100 Qtl Mustard across regional mandis"*\n• *"Show 5-level order book depth for Cotton"*\n• *"What is the 14-day price forecast for Basmati 1121?"*\n• *"Book a delivery slot at Gate #1 for tomorrow"*`,
+          actions: [
+            { label: 'Compare Wheat Mandis', type: 'COMPARE_MANDIS', payload: { commodity: 'Wheat' } },
+            { label: 'Check Mustard Depth', type: 'VIEW_DEPTH', payload: { commodity: 'Mustard', mandi: 'Alwar APMC' } },
+          ]
+        };
+
+        setMessages(prev => [...prev, refusalMsg]);
+      }, 400);
+      return;
+    }
+
     // 1. COMPARISON INTENT (e.g. "which mandi", "compare", "best mandi", "100 quintals")
     if (lower.includes('compare') || lower.includes('best mandi') || lower.includes('which mandi') || lower.includes('proceeds')) {
       setAgentActivity({
@@ -408,8 +439,37 @@ export default function AssistantPage({
         setMessages(prev => [...prev, replyMsg]);
       }, 950);
 
-    // 7. GENERAL COMMODITY SPOT PRICE QUERY
+    // 7. GENERAL COMMODITY SPOT PRICE QUERY OR AGRI CONTEXT
     } else {
+      const agriKeywords = [
+        'wheat', 'mustard', 'cotton', 'paddy', 'rice', 'basmati', 'soybean', 'chilli', 'chana',
+        'gram', 'sarson', 'kapas', 'price', 'rate', 'mandi', 'apmc', 'msp', 'spot', 'arrival',
+        'quintal', 'qtl', 'crop', 'harvest', 'sell', 'buy', 'farmer', 'merchant', 'trade'
+      ];
+      const hasAgriContext = agriKeywords.some(k => lower.includes(k));
+
+      if (!hasAgriContext) {
+        setTimeout(() => {
+          setIsLoading(false);
+          setAgentActivity(null);
+
+          const welcomeMsg = {
+            id: `asst-${Date.now()}`,
+            role: 'assistant',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            content: `Namaste! I am your specialized **AgriMart Market Intelligence Copilot**.\n\nI can retrieve real-time APMC electronic auction rates, calculate multi-mandi net proceeds after transport tariffs and 1.5% cess, or book your delivery slot.\n\nWhich crop would you like to analyze?`,
+            actions: [
+              { label: '🌾 Compare Wheat Mandis', type: 'COMPARE_MANDIS', payload: { commodity: 'Wheat' } },
+              { label: '📊 Mustard 5-Level Depth', type: 'VIEW_DEPTH', payload: { commodity: 'Mustard', mandi: 'Alwar APMC' } },
+              { label: '📈 14-Day Price Forecast', type: 'CHECK_FORECAST', payload: { commodity: 'Wheat' } },
+            ]
+          };
+
+          setMessages(prev => [...prev, welcomeMsg]);
+        }, 500);
+        return;
+      }
+
       setAgentActivity({
         currentAction: 'Querying Official APMC Spot Feeds...',
         toolName: 'get_commodity_price',
