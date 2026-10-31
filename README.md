@@ -188,7 +188,30 @@ tests/test_realtime_schemas.py::test_bid_request_validation PASSED
 tests/test_security_utils.py::test_constant_time_equal PASSED
 tests/test_security_utils.py::test_stable_json_hash_key_ordering PASSED
 tests/test_security_utils.py::test_hash_external_key PASSED
+tests/test_agentic_system.py::test_profit_calculator_deterministic_deductions PASSED
+tests/test_agentic_system.py::test_mandi_comparison_returns_sorted_proceeds PASSED
+tests/test_agentic_system.py::test_market_liquidity_depth_and_spread PASSED
+tests/test_agentic_system.py::test_forecasting_generates_confidence_intervals PASSED
+tests/test_agentic_system.py::test_slot_booking_atomic_concurrency PASSED
 
-12 passed in 1.16s
+17 passed in 2.37s
 ```
+
+---
+
+## 7. Agentic AI Copilot Architecture
+
+The platform provides a conversational AI Copilot as the primary interface:
+- **Provider Abstraction**: Supports Google Gemini, OpenAI-compatible endpoints, and a deterministic Rule-Based provider for 100% offline test reliability.
+- **Strict Separation of Concerns**: The LLM orchestrates and explains, while Python business logic deterministically executes all calculations (freight tariffs, 1.5% APMC cess, 0.5% escrow, and moisture discounts).
+- **8 Visual Response Cards**:
+  1. `CommodityPriceCard`: Verified spot price vs AGMARKNET statutory benchmark.
+  2. `MandiComparisonCard`: Regional APMC ranking sorted by Net In-Hand Proceeds.
+  3. `LiquidityCard`: 5-level market depth, bid-ask spread, and order imbalance.
+  4. `ProfitabilityCard`: Exact line-item breakdown of deductions and net proceeds.
+  5. `ForecastCard`: 14-day trajectory, 95% confidence intervals, and MAPE/RMSE metrics.
+  6. `BuyerCard`: Verified institutional buyers with escrow guarantees.
+  7. `BookingCard`: APMC gate delivery slot reservation with cryptographic QR tokens.
+  8. `TransactionCard`: 6-step lifecycle tracker (`CONTRACT_ISSUED` → `FUNDS_RELEASED`).
+
 
