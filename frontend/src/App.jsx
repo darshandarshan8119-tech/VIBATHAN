@@ -4,18 +4,24 @@ import MarketLandingPage from './components/MarketLandingPage';
 import SkanviLoginPage from './components/SkanviLoginPage';
 import MandiTicker from './components/MandiTicker';
 import Navbar from './components/Navbar';
-import AgriStockExchangeView from './components/AgriStockExchangeView';
+import AssistantPage from './pages/AssistantPage';
+import MarketTerminalPage from './pages/MarketTerminalPage';
+import TransactionsPage from './pages/TransactionsPage';
+import ProfilePage from './pages/ProfilePage';
 import SearchModal from './components/SearchModal';
 import Footer from './components/Footer';
 import AestheticTransitionLoader from './components/AestheticTransitionLoader';
-import { apiGetCurrentUser, apiLogout } from './services/api';
+import { apiLogout } from './services/api';
 import { CheckCircle2 } from 'lucide-react';
 
 export default function App() {
-  // Current View: 'landing' (Public Mandi Portal) | 'login' (Dedicated Member Authentication) | 'app' (Market Terminal Dashboard)
+  // Master View: 'landing' (Public Mandi Portal) | 'login' (Dedicated Member Access) | 'app' (Authenticated Platform)
   const [currentView, setCurrentView] = useState('landing');
 
-  // Active Mandi Tab: 'exchange' | 'arrivals' | 'lots' | 'bids' | 'contracts' | 'auction'
+  // Authenticated Sub-view: 'assistant' (Default AI Copilot) | 'terminal' (Market Terminal) | 'transactions' | 'profile'
+  const [activeAppView, setActiveAppView] = useState('assistant');
+
+  // Market Terminal Active Tab
   const [mandiTab, setMandiTab] = useState('exchange');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionMessage, setTransitionMessage] = useState('');
@@ -25,7 +31,7 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // Restore authenticated session from localStorage if token is present
+  // Restore authenticated session from localStorage if present
   useEffect(() => {
     const savedUser = localStorage.getItem('agrimart_user');
     const token = localStorage.getItem('agrimart_access_token');
@@ -47,13 +53,14 @@ export default function App() {
     }, 3200);
   };
 
-  // Successful Login Handler
+  // Successful Login Handler -> Enters Assistant Page as Default
   const handleLoginSuccess = (userData) => {
     setUser(userData);
     setIsTransitioning(true);
     setTransitionMessage(`Authenticating Member Session for ${userData.name}...`);
 
     setTimeout(() => {
+      setActiveAppView('assistant');
       setCurrentView('app');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => {
@@ -64,7 +71,7 @@ export default function App() {
     triggerToast(`Welcome back, ${userData.name}!`);
   };
 
-  // Exit from App back to Public Landing Page
+  // Exit from App back to Public Landing Portal
   const handleExitToLanding = () => {
     setIsTransitioning(true);
     setTransitionMessage('Returning to Public Mandi Portal...');
@@ -81,8 +88,14 @@ export default function App() {
   const handleLogout = () => {
     apiLogout();
     setUser(null);
-    triggerToast('Signed out of Market Terminal');
+    triggerToast('Signed out of AgriMart Platform');
     handleExitToLanding();
+  };
+
+  // View Navigation Handler
+  const handleNavigateView = (viewName) => {
+    setActiveAppView(viewName);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Keyboard shortcut Ctrl+K / Cmd+K for Market Search
@@ -97,7 +110,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // VIEW 1: DEDICATED FULL-PAGE LOGIN & REGISTRATION VIEW
+  // VIEW 1: DEDICATED FULL-PAGE LOGIN & REGISTRATION
   if (currentView === 'login') {
     return (
       <>
@@ -138,7 +151,7 @@ export default function App() {
         <MarketLandingPage 
           onEnterPlatform={() => {
             setIsTransitioning(true);
-            setTransitionMessage('Opening Secure Market Terminal Access...');
+            setTransitionMessage('Opening Secure Agentic Access...');
             setTimeout(() => {
               setCurrentView('login');
               window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -150,7 +163,7 @@ export default function App() {
     );
   }
 
-  // VIEW 3: FULL POST-LOGIN STANDALONE MARKET INTELLIGENCE TERMINAL
+  // VIEW 3: FULL POST-LOGIN PLATFORM (DEFAULT IS AI ASSISTANT)
   return (
     <div className="min-h-screen flex flex-col bg-[#FBFBF9] text-[#121212] selection:bg-[#EBE8E2] selection:text-[#121212] font-sans">
       
@@ -163,16 +176,22 @@ export default function App() {
       )}
 
       {/* TOP STRIP: Live Mandi National Ticker */}
-      <MandiTicker onOpenMandiTerminal={() => setMandiTab('exchange')} />
+      <MandiTicker onOpenMandiTerminal={() => {
+        setActiveAppView('terminal');
+        setMandiTab('exchange');
+      }} />
 
-      {/* Sticky Header with Market Intelligence Tabs */}
+      {/* Navigation Header */}
       <Navbar 
         user={user}
         onOpenLogin={() => setCurrentView('login')}
         onLogout={handleLogout}
         onOpenSearch={() => setIsSearchOpen(true)}
         mandiTab={mandiTab}
-        onSelectMandiTab={setMandiTab}
+        onSelectMandiTab={(tab) => {
+          setMandiTab(tab);
+          setActiveAppView('terminal');
+        }}
         onExitToLanding={handleExitToLanding}
       />
 
@@ -184,12 +203,42 @@ export default function App() {
         </div>
       )}
 
-      {/* MAIN CONTENT: AGRISTOCK MANDI COMMODITY EXCHANGE */}
-      <main className="flex-1 pb-16">
-        <AgriStockExchangeView 
-          activeTab={mandiTab} 
-          onTabChange={setMandiTab} 
-        />
+      {/* MAIN VIEW: RENDERED BASED ON activeAppView */}
+      <main className="flex-1">
+        {activeAppView === 'assistant' && (
+          <AssistantPage
+            user={user}
+            onLogout={handleLogout}
+            onNavigateView={handleNavigateView}
+            activeView={activeAppView}
+            onSelectCommodityForTerminal={(commodity) => {
+              setMandiTab('exchange');
+              setActiveAppView('terminal');
+            }}
+          />
+        )}
+
+        {activeAppView === 'terminal' && (
+          <MarketTerminalPage 
+            activeTab={mandiTab} 
+            onTabChange={setMandiTab} 
+            onReturnToAssistant={() => setActiveAppView('assistant')}
+          />
+        )}
+
+        {activeAppView === 'transactions' && (
+          <TransactionsPage 
+            onReturnToAssistant={() => setActiveAppView('assistant')}
+          />
+        )}
+
+        {activeAppView === 'profile' && (
+          <ProfilePage 
+            user={user} 
+            onLogout={handleLogout}
+            onReturnToAssistant={() => setActiveAppView('assistant')}
+          />
+        )}
       </main>
 
       {/* Global Commodity & Mandi Search Modal */}
@@ -198,14 +247,19 @@ export default function App() {
         onClose={() => setIsSearchOpen(false)}
         onSelectCommodity={() => {
           setMandiTab('exchange');
+          setActiveAppView('terminal');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
       />
 
-      {/* Market Intelligence Footer */}
-      <Footer onSelectMandiTab={setMandiTab} />
+      {/* Footer is only rendered on Terminal, Transactions, and Profile pages to keep chat area clean */}
+      {activeAppView !== 'assistant' && (
+        <Footer onSelectMandiTab={(tab) => {
+          setMandiTab(tab);
+          setActiveAppView('terminal');
+        }} />
+      )}
 
     </div>
   );
 }
-
