@@ -26,12 +26,28 @@ class AssistantChatView(APIView):
                 title = serializer.validated_data["message"][:180]
                 conversation = Conversation.objects.create(user=request.user, title=title)
 
+            conversation_history = [
+                {
+                    "role": message.role,
+                    "content": message.content,
+                    "card_type": message.card_type,
+                    "card_data": message.card_data,
+                }
+                for message in conversation.messages.order_by("created_at")
+            ]
             user_message = Message.objects.create(
                 conversation=conversation,
                 role=Message.Role.USER,
                 content=serializer.validated_data["message"],
             )
-            result = AgentCoordinator().run(request.user, user_message.content, str(conversation.id))
+            result = AgentCoordinator().run(
+                request.user,
+                user_message.content,
+                str(conversation.id),
+                serializer.validated_data["explanation_level"],
+                serializer.validated_data["language"],
+                conversation_history,
+            )
             assistant_message = Message.objects.create(
                 conversation=conversation,
                 role=Message.Role.ASSISTANT,
@@ -45,6 +61,9 @@ class AssistantChatView(APIView):
             {
                 "conversation": ConversationSerializer(conversation).data,
                 "message": MessageSerializer(assistant_message).data,
+                "farmer_explanation": result["farmer_explanation"],
+                "explanation_level": serializer.validated_data["explanation_level"],
+                "language": serializer.validated_data["language"],
             },
             status=status.HTTP_201_CREATED,
         )

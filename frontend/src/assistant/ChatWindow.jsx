@@ -14,6 +14,8 @@ export default function ChatWindow({
   onClearMessages,
   onOpenSidebar,
   onAction, // Navigation or interactive card actions
+  language,
+  onLanguageChange,
 }) {
   const messagesEndRef = useRef(null);
 
@@ -143,6 +145,8 @@ export default function ChatWindow({
         <ChatInput 
           onSendMessage={onSendMessage}
           disabled={isLoading}
+          language={language}
+          onLanguageChange={onLanguageChange}
         />
       </footer>
 

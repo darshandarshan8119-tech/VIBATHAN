@@ -70,5 +70,9 @@ def generate_price_forecast(
         "rmse": result.rmse,
         "recommendation": recommendation,
         "forecastPoints": chart_points,
+        "historicalPoints": [
+            {"day": observed_date.strftime("%b %d"), "price": round(price, 2)}
+            for observed_date, price in zip(series_data["dates"][-14:], prices[-14:])
+        ],
     }
 

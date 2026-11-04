@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import ConversationSidebar from '../assistant/ConversationSidebar';
 import ChatWindow from '../assistant/ChatWindow';
+import { apiAssistantChat } from '../services/api';
 
 export default function AssistantPage({
   user,
@@ -31,6 +32,71 @@ export default function AssistantPage({
 
   const [isLoading, setIsLoading] = useState(false);
   const [agentActivity, setAgentActivity] = useState(null);
+  const [lastMarketQuery, setLastMarketQuery] = useState('');
+  const [chatLanguage, setChatLanguage] = useState('en');
+
+  const handleSendMessage = async (text, explanationLevel = 'simple') => {
+    const userMsg = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: text,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    const isPersistedConversation = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(activeConversationId);
+
+    setMessages(prev => [...prev, userMsg]);
+    setLastMarketQuery(text);
+    setIsLoading(true);
+    setAgentActivity({
+      currentAction: 'Checking available market data and verified calculations...',
+      toolName: 'market_intelligence',
+      steps: ['Reading available APMC data', 'Running deterministic calculations where needed', 'Preparing a farmer-friendly explanation'],
+    });
+
+    try {
+      const response = await apiAssistantChat(
+        text,
+        isPersistedConversation ? activeConversationId : undefined,
+        explanationLevel,
+        chatLanguage,
+      );
+      const assistant = response.message;
+      const card = assistant.card_type ? { type: assistant.card_type, data: assistant.card_data } : null;
+      const replyMsg = {
+        id: assistant.id,
+        role: 'assistant',
+        content: assistant.content,
+        timestamp: new Date(assistant.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        card,
+        farmerExplanation: response.farmer_explanation,
+        actions: (card?.type === 'booking' || card?.type === 'transaction') ? [
+          { label: '📋 View in Transactions & Escrow', type: 'VIEW_CONTRACT_NOTE' },
+          { label: '📊 Open Market Terminal', type: 'OPEN_TERMINAL' },
+        ] : (card ? [
+          { label: '⚡ Instant Buy & Book Slot', type: 'BOOK_SLOT' },
+          { label: 'Explain more simply', type: 'EXPLAIN_SIMPLE' },
+          { label: 'Show detailed analysis', type: 'EXPLAIN_DETAILED' },
+        ] : []),
+      };
+      const conversation = response.conversation;
+      setActiveConversationId(conversation.id);
+      setConversations(prev => [
+        { id: conversation.id, title: conversation.title || 'Market inquiry', createdAt: 'Just now' },
+        ...prev.filter(item => item.id !== activeConversationId && item.id !== conversation.id),
+      ]);
+      setMessages(prev => [...prev, replyMsg]);
+    } catch (error) {
+      setMessages(prev => [...prev, {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        timestamp: 'Just now',
+        content: error.message || 'The market service is unavailable. Please try again.',
+      }]);
+    } finally {
+      setIsLoading(false);
+      setAgentActivity(null);
+    }
+  };
 
   // Handle New Conversation
   const handleNewConversation = () => {
@@ -62,7 +128,7 @@ export default function AssistantPage({
   };
 
   // Agentic Query Dispatcher & Deterministic Pipeline Simulator (Phase 1 conversational UI engine)
-  const handleSendMessage = (text) => {
+  const handleMockSendMessage = (text) => {
     const userMsg = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -515,6 +581,18 @@ export default function AssistantPage({
   // Handle Actions Dispatched by Interactive Cards or Action Pills
   const handleAction = (type, payload) => {
     switch (type) {
+      case 'EXPLAIN_SIMPLE':
+        if (lastMarketQuery) handleSendMessage(lastMarketQuery, 'simple');
+        break;
+
+      case 'EXPLAIN_DETAILED':
+        if (lastMarketQuery) handleSendMessage(lastMarketQuery, 'detailed');
+        break;
+
+      case 'EXPLAIN_TECHNICAL':
+        if (lastMarketQuery) handleSendMessage(lastMarketQuery, 'technical');
+        break;
+
       case 'OPEN_TERMINAL':
       case 'VIEW_DEPTH':
         if (onSelectCommodityForTerminal && payload?.commodity) {
@@ -539,9 +617,14 @@ export default function AssistantPage({
         handleSendMessage(`Show verified APMC buyers for ${payload?.commodity || 'Wheat'}`);
         break;
 
-      case 'BOOK_SLOT':
-        handleSendMessage(`Book delivery slot at ${payload?.mandi || 'Ludhiana APMC'} for ${payload?.commodity || 'Wheat'}`);
+      case 'SELECT_MANDI':
+      case 'BOOK_SLOT': {
+        const mandiName = payload?.mandiName || payload?.mandi || 'Karnal APMC';
+        const commodityName = payload?.commodity || 'Wheat';
+        const qty = payload?.quantity || 100;
+        handleSendMessage(`Book delivery slot at ${mandiName} for ${qty} quintals of ${commodityName}`);
         break;
+      }
 
       case 'SLOT_CONFIRMED': {
         const confirmMsg = {
@@ -590,6 +673,8 @@ export default function AssistantPage({
         onClearMessages={() => setMessages([])}
         onOpenSidebar={() => setSidebarOpen(true)}
         onAction={handleAction}
+        language={chatLanguage}
+        onLanguageChange={setChatLanguage}
       />
     </div>
   );

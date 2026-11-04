@@ -46,6 +46,18 @@ export default function App() {
     }
   }, []);
 
+  // The API client emits this when a stored JWT is no longer accepted.
+  useEffect(() => {
+    const handleExpiredSession = () => {
+      setUser(null);
+      setCurrentView('login');
+      setActiveAppView('assistant');
+    };
+
+    window.addEventListener('agrimart-auth-expired', handleExpiredSession);
+    return () => window.removeEventListener('agrimart-auth-expired', handleExpiredSession);
+  }, []);
+
   // Global Toast Trigger
   const triggerToast = (message) => {
     const id = Date.now();

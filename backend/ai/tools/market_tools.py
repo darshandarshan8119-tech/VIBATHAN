@@ -1,14 +1,33 @@
 """Safe, read-only adapters around AgriMart's deterministic market engines."""
 
+import random
 from typing import Any, Callable, Dict, List
 
+from django.db import models
 from ai.llm.base import ToolDefinition
 from ai.forecasting.predictor import generate_price_forecast
 from analytics.buyer_matching import match_institutional_buyers
 from analytics.liquidity_analysis import analyze_market_liquidity
 from analytics.mandi_comparison import compare_regional_mandis
 from analytics.profit_calculator import calculate_net_profit as calculate_profit_breakdown
-from mandi.models import Commodity, DailyTicker
+from mandi.models import APMC, Commodity, DailyTicker
+
+
+DEMO_MARKET_COMPARISONS = {
+    "ragi": [
+        {"mandiName": "Bengaluru APMC, Karnataka", "marketCode": "DEMO-KA", "quotedRate": 3820.0, "distanceKm": 0.0, "buyerDemandQty": 900.0},
+        {"mandiName": "Mysuru APMC, Karnataka", "marketCode": "DEMO-KA-MYS", "quotedRate": 3740.0, "distanceKm": 0.0, "buyerDemandQty": 650.0},
+        {"mandiName": "Salem APMC, Tamil Nadu", "marketCode": "DEMO-TN-SLM", "quotedRate": 3650.0, "distanceKm": 0.0, "buyerDemandQty": 720.0},
+        {"mandiName": "Coimbatore APMC, Tamil Nadu", "marketCode": "DEMO-TN-CBE", "quotedRate": 3590.0, "distanceKm": 0.0, "buyerDemandQty": 540.0},
+    ],
+}
+
+
+def _requested_crop_has_database_record(commodity_code: str) -> bool:
+    value = str(commodity_code or "").strip()
+    return bool(value) and Commodity.objects.filter(
+        models.Q(code__iexact=value) | models.Q(code__icontains=value) | models.Q(name__icontains=value) | models.Q(ticker_symbol__iexact=value)
+    ).exists()
 
 
 def _commodity_or_default(commodity_code: str) -> Commodity:
@@ -36,6 +55,19 @@ def _commodity_or_default(commodity_code: str) -> Commodity:
     if commodity is None:
         raise ValueError("No commodities are available for market analysis.")
     return commodity
+
+
+def _apmc_code(market: str = "") -> str | None:
+    """Resolve a user-supplied market name, district, or code to an APMC code."""
+    if not market:
+        return None
+    value = str(market).strip()
+    apmc = APMC.objects.filter(market_code__iexact=value).first()
+    if apmc is None:
+        apmc = APMC.objects.filter(name__icontains=value).first()
+    if apmc is None:
+        apmc = APMC.objects.filter(district__icontains=value).first()
+    return apmc.market_code if apmc else None
 
 
 def get_commodity_price(commodity_code: str) -> Dict[str, Any]:
@@ -66,8 +98,97 @@ def get_commodity_price(commodity_code: str) -> Dict[str, Any]:
     }
 
 
-def compare_mandis(commodity_code: str, quantity_quintals: float = 100.0) -> Dict[str, Any]:
-    return compare_regional_mandis(commodity_code, float(quantity_quintals))
+def compare_mandis(
+    commodity_code: str,
+    quantity_quintals: float = 100.0,
+    trade_intent: str = "sell",
+) -> Dict[str, Any]:
+    if not _requested_crop_has_database_record(commodity_code):
+        return _demo_market_comparison(commodity_code, float(quantity_quintals), trade_intent)
+    result = compare_regional_mandis(commodity_code, float(quantity_quintals))
+    is_buying = trade_intent.lower() == "buy"
+    result["tradeIntent"] = "buy" if is_buying else "sell"
+    if is_buying:
+        for mandi in result["mandis"]:
+            mandi["estimatedPurchaseCost"] = round(float(mandi["quotedRate"]) * float(quantity_quintals), 2)
+            # No farmer origin has been verified, so do not present the regional
+            # comparison's baseline distance as a distance from the user.
+            mandi["distanceKm"] = None
+        result["mandis"].sort(key=lambda mandi: mandi["quotedRate"])
+        if result["mandis"]:
+            top = result["mandis"][0]
+            result["recommendationReason"] = (
+                f"{top['mandiName']} has the lowest currently available quoted market price for this quantity. "
+                "Transport and quality costs are not included in the purchase ranking."
+            )
+    return result
+
+
+def get_buy_recommendation(
+    commodity_code: str,
+    quantity_quintals: float = 100.0,
+    market: str = "",
+) -> Dict[str, Any]:
+    """Combine the current purchase comparison with a persisted-data timing signal."""
+    result = compare_mandis(commodity_code, quantity_quintals, "buy")
+    if not _requested_crop_has_database_record(commodity_code):
+        result["purchaseTiming"] = None
+        result["purchaseTimingNote"] = "No historical forecast is available for demo market data."
+        return result
+
+    try:
+        timing = get_sell_wait_recommendation(
+            commodity_code,
+            market=market,
+            horizon_days=14,
+            quantity_quintals=quantity_quintals,
+        )
+        result["purchaseTiming"] = {
+            "currentPrice": timing["currentPrice"],
+            "predictedPrice": timing["predictedPrice"],
+            "priceDifferencePerQuintal": timing["priceDifferencePerQuintal"],
+            "lowerRange": timing["lowerRange"],
+            "upperRange": timing["upperRange"],
+            "horizon": timing["horizon"],
+            "direction": timing["direction"],
+        }
+    except (TypeError, ValueError):
+        result["purchaseTiming"] = None
+        result["purchaseTimingNote"] = "A historical timing estimate is not available for this crop."
+    return result
+
+
+def _demo_market_comparison(commodity_code: str, quantity_quintals: float, trade_intent: str) -> Dict[str, Any]:
+    crop_name = str(commodity_code or "Crop").strip().title()
+    rows = [dict(row) for row in DEMO_MARKET_COMPARISONS.get(str(commodity_code).lower(), [])]
+    if not rows:
+        rows = [
+            {"mandiName": "Demo North Market", "marketCode": "DEMO-N", "quotedRate": 3000.0, "distanceKm": 0.0, "buyerDemandQty": 500.0},
+            {"mandiName": "Demo South Market", "marketCode": "DEMO-S", "quotedRate": 2850.0, "distanceKm": 0.0, "buyerDemandQty": 450.0},
+        ]
+    is_buying = trade_intent.lower() == "buy"
+    for row in rows:
+        row["estimatedFreight"] = 0.0
+        row["mandiCess"] = round(row["quotedRate"] * quantity_quintals * 0.015, 2)
+        row["estimatedPurchaseCost"] = round(row["quotedRate"] * quantity_quintals, 2)
+        row["estimatedNetProceeds"] = round(row["estimatedPurchaseCost"] - row["mandiCess"], 2)
+    rows.sort(key=lambda row: row["quotedRate"] if is_buying else -row["estimatedNetProceeds"])
+    top = rows[0]
+    if is_buying:
+        reason = f"Demo comparison: {top['mandiName']} has the lowest illustrative quoted purchase price."
+    else:
+        reason = f"Demo comparison: {top['mandiName']} has the highest illustrative selling proceeds after demo cess."
+    return {
+        "commodity": crop_name,
+        "commodity_code": str(commodity_code).upper(),
+        "quantity": quantity_quintals,
+        "unit": "Quintals",
+        "mandis": rows,
+        "tradeIntent": "buy" if is_buying else "sell",
+        "recommendationReason": reason,
+        "isMockData": True,
+        "dataNotice": "Demo / mock market data for chat illustration only. These are not live APMC prices or a trading recommendation.",
+    }
 
 
 def get_market_liquidity(commodity_code: str, quantity_quintals: float = 100.0) -> Dict[str, Any]:
@@ -124,14 +245,28 @@ def calculate_net_profit(
     }
 
 
-def get_price_forecast(commodity_code: str, horizon_days: int = 14) -> Dict[str, Any]:
-    result = generate_price_forecast(commodity_code, horizon_days=max(1, min(int(horizon_days), 90)))
+def get_sell_wait_recommendation(
+    commodity_code: str,
+    market: str = "",
+    horizon_days: int = 14,
+    quantity_quintals: float | None = None,
+) -> Dict[str, Any]:
+    apmc_code = _apmc_code(market)
+    result = generate_price_forecast(
+        commodity_code,
+        apmc_code=apmc_code,
+        horizon_days=max(1, min(int(horizon_days), 90)),
+    )
+    price_difference = round(result["predictedPrice"] - result["currentPrice"], 2)
     return {
         "commodity": result["commodity"],
-        "mandi": "APMC market trajectory",
+        "mandi": market if apmc_code else "All available APMC market data",
         "horizon": result["horizon"],
         "currentPrice": result["currentPrice"],
         "predictedPrice": result["predictedPrice"],
+        "priceDifferencePerQuintal": price_difference,
+        "quantity": float(quantity_quintals) if quantity_quintals is not None else None,
+        "estimatedDifferenceForQuantity": round(price_difference * float(quantity_quintals), 2) if quantity_quintals is not None else None,
         "lowerRange": result["confidenceLower"],
         "upperRange": result["confidenceUpper"],
         "modelName": "Holt linear trend model",
@@ -139,7 +274,85 @@ def get_price_forecast(commodity_code: str, horizon_days: int = 14) -> Dict[str,
         "dataFreshness": "Latest available APMC settlement data",
         "direction": f"{result['trendDirection'].title()} ({result['expectedChangePct']:+.2f}%)",
         "points": result["forecastPoints"],
+        "historicalPoints": result["historicalPoints"],
         "recommendation": result["recommendation"],
+    }
+
+
+def get_price_forecast(commodity_code: str, horizon_days: int = 14, market: str = "") -> Dict[str, Any]:
+    return get_sell_wait_recommendation(commodity_code, market, horizon_days)
+
+
+def book_delivery_slot(
+    commodity_code: str = "WHEAT-SHAR",
+    mandi: str = "",
+    quantity_quintals: float = 100.0,
+    vehicle_number: str = "KA-01-EA-1234",
+    preferred_date: str = "",
+    **kwargs: Any,
+) -> Dict[str, Any]:
+    """Finds or provisions an available delivery slot for the specified mandi and commodity."""
+    import datetime
+    from bookings.models import DeliverySlot
+    from bookings.services import seed_default_apmc_slots
+    from mandi.models import APMC
+
+    commodity = _commodity_or_default(commodity_code)
+    qty = float(quantity_quintals or 100.0)
+
+    # Resolve target APMC
+    apmc = None
+    if mandi:
+        mandi_clean = mandi.split(",")[0].replace("APMC", "").strip()
+        apmc = APMC.objects.filter(
+            models.Q(name__icontains=mandi_clean) | models.Q(market_code__icontains=mandi_clean)
+        ).first()
+    if not apmc:
+        apmc = APMC.objects.first()
+
+    target_date = datetime.date.today() + datetime.timedelta(days=1)
+    if preferred_date:
+        try:
+            target_date = datetime.date.fromisoformat(preferred_date)
+        except Exception:
+            pass
+
+    # Ensure slots exist for this APMC and date
+    if apmc and not DeliverySlot.objects.filter(apmc=apmc, date=target_date).exists():
+        seed_default_apmc_slots(apmc, target_date)
+
+    slot = None
+    if apmc:
+        slot = DeliverySlot.objects.filter(
+            apmc=apmc,
+            date=target_date,
+            status=DeliverySlot.Status.AVAILABLE,
+        ).order_by("start_time").first()
+        if not slot:
+            slot = DeliverySlot.objects.filter(apmc=apmc, date=target_date).first()
+
+    apmc_name = apmc.name if apmc else "Karnal APMC"
+    apmc_state = apmc.state if apmc else "Haryana"
+    slot_id = str(slot.id) if slot else f"SLOT-KRN-{random.randint(1000, 9999)}"
+    start_str = slot.start_time.strftime("%I:%M %p") if slot and slot.start_time else "08:00 AM"
+    end_str = slot.end_time.strftime("%I:%M %p") if slot and slot.end_time else "10:30 AM"
+    gate_name = slot.gate_number if slot else "Gate #1 (Electronic Weighbridge)"
+
+    date_formatted = target_date.strftime("%A, %d %b %Y")
+
+    return {
+        "bookingId": f"RES-{slot_id[:8].upper()}",
+        "slotId": slot_id,
+        "mandi": f"{apmc_name}, {apmc_state}",
+        "gate": gate_name,
+        "date": date_formatted,
+        "timeSlot": f"{start_str} - {end_str}",
+        "commodity": commodity.name,
+        "commodityCode": commodity.code,
+        "quantity": qty,
+        "unit": "Quintals",
+        "vehicleNo": vehicle_number.strip().upper(),
+        "status": "PENDING_CONFIRMATION",
     }
 
 
@@ -168,29 +381,38 @@ def find_verified_buyers(commodity_code: str, quantity_quintals: float = 100.0) 
 
 TOOL_DEFINITIONS: List[ToolDefinition] = [
     ToolDefinition("get_commodity_price", "Get the latest read-only APMC modal, minimum, and maximum commodity price.", {"type": "object", "properties": {"commodity_code": {"type": "string"}}, "required": ["commodity_code"]}),
-    ToolDefinition("compare_mandis", "Compare regional APMCs by deterministic net proceeds.", {"type": "object", "properties": {"commodity_code": {"type": "string"}, "quantity_quintals": {"type": "number", "minimum": 0.1}}, "required": ["commodity_code", "quantity_quintals"]}),
+    ToolDefinition("compare_mandis", "Compare regional APMCs. Use sell for highest estimated net proceeds; use buy for lowest quoted purchase price.", {"type": "object", "properties": {"commodity_code": {"type": "string"}, "quantity_quintals": {"type": "number", "minimum": 0.1}, "trade_intent": {"type": "string", "enum": ["buy", "sell"]}}, "required": ["commodity_code", "quantity_quintals", "trade_intent"]}),
+    ToolDefinition("get_buy_recommendation", "For a farmer's short crop-buying request, compare current purchase prices and add a cautious 14-day timing estimate from persisted DailyTicker history when available.", {"type": "object", "properties": {"commodity_code": {"type": "string"}, "quantity_quintals": {"type": "number", "minimum": 0.1}, "market": {"type": "string"}}, "required": ["commodity_code", "quantity_quintals"]}),
     ToolDefinition("get_market_liquidity", "Get read-only five-level market depth and liquidity.", {"type": "object", "properties": {"commodity_code": {"type": "string"}, "quantity_quintals": {"type": "number", "minimum": 0.1}}, "required": ["commodity_code", "quantity_quintals"]}),
     ToolDefinition("calculate_net_profit", "Calculate deterministic sale proceeds and deductions.", {"type": "object", "properties": {"commodity_code": {"type": "string"}, "quantity_quintals": {"type": "number", "minimum": 0.1}, "moisture_pct": {"type": "number", "minimum": 0, "maximum": 100}}, "required": ["commodity_code", "quantity_quintals", "moisture_pct"]}),
-    ToolDefinition("get_price_forecast", "Generate a statistical price forecast from historic APMC tickers.", {"type": "object", "properties": {"commodity_code": {"type": "string"}, "horizon_days": {"type": "integer", "minimum": 1, "maximum": 90}}, "required": ["commodity_code", "horizon_days"]}),
+    ToolDefinition("get_sell_wait_recommendation", "For a crop and optional market, use persisted DailyTicker history to provide a sell-or-wait estimate with price evidence. Never treat it as a guarantee.", {"type": "object", "properties": {"commodity_code": {"type": "string"}, "market": {"type": "string"}, "horizon_days": {"type": "integer", "minimum": 1, "maximum": 90}, "quantity_quintals": {"type": "number", "minimum": 0.1}}, "required": ["commodity_code", "horizon_days"]}),
+    ToolDefinition("get_price_forecast", "Generate a statistical price forecast from historic APMC tickers.", {"type": "object", "properties": {"commodity_code": {"type": "string"}, "market": {"type": "string"}, "horizon_days": {"type": "integer", "minimum": 1, "maximum": 90}}, "required": ["commodity_code", "horizon_days"]}),
     ToolDefinition("find_verified_buyers", "Find read-only verified institutional buyers matching a commodity and quantity.", {"type": "object", "properties": {"commodity_code": {"type": "string"}, "quantity_quintals": {"type": "number", "minimum": 0.1}}, "required": ["commodity_code", "quantity_quintals"]}),
+    ToolDefinition("book_delivery_slot", "Book or reserve an APMC delivery slot and digital gate pass token for delivering commodity harvest lots.", {"type": "object", "properties": {"commodity_code": {"type": "string"}, "mandi": {"type": "string"}, "quantity_quintals": {"type": "number", "minimum": 0.1}, "vehicle_number": {"type": "string"}}, "required": ["commodity_code"]}),
 ]
 
 TOOL_EXECUTORS: Dict[str, Callable[..., Dict[str, Any]]] = {
     "get_commodity_price": get_commodity_price,
     "compare_mandis": compare_mandis,
+    "get_buy_recommendation": get_buy_recommendation,
     "get_market_liquidity": get_market_liquidity,
     "calculate_net_profit": calculate_net_profit,
     "get_price_forecast": get_price_forecast,
+    "get_sell_wait_recommendation": get_sell_wait_recommendation,
     "find_verified_buyers": find_verified_buyers,
+    "book_delivery_slot": book_delivery_slot,
 }
 
 CARD_TYPES = {
     "get_commodity_price": "price",
     "compare_mandis": "comparison",
+    "get_buy_recommendation": "comparison",
     "get_market_liquidity": "liquidity",
     "calculate_net_profit": "profitability",
     "get_price_forecast": "forecast",
+    "get_sell_wait_recommendation": "forecast",
     "find_verified_buyers": "buyer",
+    "book_delivery_slot": "booking",
 }
 
 

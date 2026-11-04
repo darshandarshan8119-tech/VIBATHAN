@@ -1,6 +1,7 @@
 // src/assistant/cards/ForecastCard.jsx
 import React from 'react';
 import { TrendingUp, AlertCircle, Clock, ShieldCheck, Sparkles, BarChart2 } from 'lucide-react';
+import MerchantTrendGraph from './MerchantTrendGraph';
 
 export default function ForecastCard({ data, onAction }) {
   if (!data) return null;
@@ -17,6 +18,12 @@ export default function ForecastCard({ data, onAction }) {
     evaluationMetric = 'MAPE: 2.14% on 90-day test window',
     dataFreshness = 'Updated with today\'s APMC settlement',
     direction = 'Bullish (+2.45%)',
+    priceDifferencePerQuintal = null,
+    quantity = null,
+    estimatedDifferenceForQuantity = null,
+    recommendation = '',
+    merchantAnalysis = false,
+    historicalPoints = [],
     points = [
       { day: 'Day 1', price: 2460 },
       { day: 'Day 2', price: 2475 },
@@ -89,6 +96,23 @@ export default function ForecastCard({ data, onAction }) {
           ))}
         </div>
       </div>
+
+      {(priceDifferencePerQuintal !== null || recommendation) && (
+        <div className="mt-3 rounded-xl bg-[#FAF9F5] border border-black/[0.06] px-3 py-2.5 text-xs leading-relaxed text-slate-700">
+          {priceDifferencePerQuintal !== null && <p>Expected price difference: {priceDifferencePerQuintal} per quintal{quantity ? ` for ${quantity} quintals` : ''}{estimatedDifferenceForQuantity !== null ? `; estimated total difference before other costs: ${estimatedDifferenceForQuantity}.` : '.'}</p>}
+          {recommendation && <p className="mt-1"><strong className="text-slate-900">Decision guide:</strong> {recommendation}</p>}
+        </div>
+      )}
+
+      {merchantAnalysis && historicalPoints.length > 1 && points.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-black/[0.06]">
+          <div className="flex items-center justify-between text-[10px] uppercase font-mono text-slate-400 mb-1">
+            <span>Merchant price trend</span>
+            <span>Solid: history / Dashed: estimate</span>
+          </div>
+          <MerchantTrendGraph historicalPoints={historicalPoints} forecastPoints={points} />
+        </div>
+      )}
 
       {/* Model Specs & Non-Negotiable Disclaimer */}
       <div className="mt-3 pt-3 border-t border-black/[0.06] text-[11px] text-slate-500 space-y-1">

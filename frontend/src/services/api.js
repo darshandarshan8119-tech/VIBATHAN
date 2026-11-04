@@ -23,6 +23,15 @@ async function apiRequest(endpoint, options = {}, baseUrl = DJANGO_BASE_URL) {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     const errorMsg = errorData.error || errorData.detail || `Request failed with status ${response.status}`;
+
+    // A server restart or an expired JWT can leave an old token in the browser.
+    // Reset it once here so every authenticated feature recovers consistently.
+    if (response.status === 401) {
+      apiLogout();
+      window.dispatchEvent(new Event('agrimart-auth-expired'));
+      throw new Error('Your session has expired. Please sign in again.');
+    }
+
     throw new Error(errorMsg);
   }
 
@@ -105,6 +114,48 @@ export async function apiGetAPMCs() {
  */
 export async function apiGetAuctionLots() {
   return apiRequest('/api/v1/mandi/lots/');
+}
+
+export async function apiAssistantChat(message, conversationId, explanationLevel = 'simple', language = 'en') {
+  return apiRequest('/api/v1/assistant/chat/', {
+    method: 'POST',
+    body: JSON.stringify({
+      message,
+      ...(conversationId ? { conversation_id: conversationId } : {}),
+      explanation_level: explanationLevel,
+      language,
+    }),
+  });
+}
+
+/**
+ * Get Verified Electronic Contract Notes & Escrow Transactions
+ */
+export async function apiGetTransactions() {
+  return apiRequest('/api/v1/transactions/');
+}
+
+/**
+ * Get APMC Delivery Gate Slot Bookings
+ */
+export async function apiGetMyBookings() {
+  return apiRequest('/api/v1/bookings/my-bookings/');
+}
+
+/**
+ * Create a Delivery Slot Booking
+ */
+export async function apiCreateSlotBooking(slotId, commodityCode, quantityQuintals, vehicleNumber, driverPhone) {
+  return apiRequest('/api/v1/bookings/create/', {
+    method: 'POST',
+    body: JSON.stringify({
+      slot_id: slotId,
+      commodity_code: commodityCode,
+      quantity_quintals: quantityQuintals,
+      vehicle_number: vehicleNumber,
+      driver_phone: driverPhone || '',
+    }),
+  });
 }
 
 /**

@@ -15,6 +15,8 @@ class RuleBasedLLMProvider(BaseLLMProvider):
 
     def _extract_commodity(self, text: str) -> str:
         text_lower = text.lower()
+        if "tomato" in text_lower or "tamatar" in text_lower:
+            return "tomato"
         if "mustard" in text_lower or "sarson" in text_lower or "black mustard" in text_lower:
             return "MUST-BLK"
         if "cotton" in text_lower or "kapas" in text_lower or "shankar" in text_lower:
@@ -46,6 +48,18 @@ class RuleBasedLLMProvider(BaseLLMProvider):
             return float(match_num.group(1))
         return 100.0
 
+    def _extract_market(self, text: str) -> str:
+        markets = {
+            "ludhiana": "PB-LDH-01",
+            "alwar": "RJ-ALW-01",
+            "rajkot": "GJ-RJK-01",
+            "karnal": "HR-KRN-01",
+            "indore": "MP-IND-01",
+            "guntur": "AP-GNT-01",
+        }
+        text_lower = text.lower()
+        return next((code for name, code in markets.items() if name in text_lower), "")
+
     def chat(
         self,
         messages: List[ChatMessage],
@@ -72,23 +86,76 @@ class RuleBasedLLMProvider(BaseLLMProvider):
         if tools:
             tool_names = {t.name for t in tools}
 
+            if any(k in user_text for k in ["profit when i sell", "profit when i resell", "buy and sell", "buy to sell"]):
+                return LLMResponse(
+                    content=(
+                        "To estimate resale profit, please share the paddy variety, quantity you plan to buy, "
+                        "purchase market, expected selling market, transport cost, storage cost per quintal, "
+                        "holding period, and quality or moisture limit. I will use available prices for comparison, "
+                        "but I cannot guarantee a resale price or future demand date."
+                    ),
+                    finish_reason="stop",
+                )
+
+            if any(k in user_text for k in ["cold storage", "storage capacity", "merchant plan", "apmc business", "warehouse plan"]):
+                return LLMResponse(
+                    content=(
+                        "To prepare a business decision, please share: crop, whether you plan to buy or sell, "
+                        "quantity needed, target market, available storage capacity, storage cost per quintal, "
+                        "how many days you can hold stock, quality or moisture limits, and your cash-flow need.\n\n"
+                        "I can then compare currently available prices and the historical price trend. "
+                        "I will not claim an exact future demand date unless verified buyer or order-book data is available."
+                    ),
+                    finish_reason="stop",
+                )
+
             # 1. Slot Booking intent
-            if any(k in user_text for k in ["book slot", "booking", "delivery slot", "gate pass", "reserve slot"]):
+            if any(k in user_text for k in ["book slot", "booking", "delivery slot", "gate pass", "reserve slot", "book delivery", "select & book"]):
                 if "book_delivery_slot" in tool_names:
                     return LLMResponse(
                         content="Initiating APMC electronic gate slot reservation...",
                         tool_calls=[{
                             "name": "book_delivery_slot",
                             "arguments": {
-                                "apmc_code": "APMC_LUD",
+                                "mandi": self._extract_market(user_text) or "Karnal APMC, Haryana",
                                 "commodity_code": self._extract_commodity(user_text),
                                 "quantity_quintals": self._extract_quantity(user_text),
-                                "vehicle_number": "PB-10-CZ-4821",
+                                "vehicle_number": "KA-01-EA-1234",
                             }
                         }]
                     )
 
-            # 2. Mandi comparison intent
+            # 2. Buying / procurement comparison ranks lowest quoted price.
+            if any(k in user_text for k in ["buy", "purchase", "procure", "procurement", "where to get"]):
+                if "get_buy_recommendation" in tool_names:
+                    return LLMResponse(
+                        content="Checking the available purchase prices and the recent market trend...",
+                        tool_calls=[{
+                            "name": "get_buy_recommendation",
+                            "arguments": {
+                                "commodity_code": self._extract_commodity(user_text),
+                                "quantity_quintals": self._extract_quantity(user_text),
+                                "market": self._extract_market(user_text),
+                            },
+                        }],
+                    )
+
+            # 3. Selling market comparison ranks estimated net proceeds.
+            if any(k in user_text for k in ["where should i sell", "where to sell", "sell my"]):
+                if "compare_mandis" in tool_names:
+                    return LLMResponse(
+                        content="Comparing regional mandis for the highest estimated selling proceeds...",
+                        tool_calls=[{
+                            "name": "compare_mandis",
+                            "arguments": {
+                                "commodity_code": self._extract_commodity(user_text),
+                                "quantity_quintals": self._extract_quantity(user_text),
+                                "trade_intent": "sell",
+                            },
+                        }],
+                    )
+
+            # 4. General mandi comparison intent
             if any(k in user_text for k in ["compare", "which mandi", "best mandi", "better price", "highest profit", "net proceeds"]):
                 if "compare_mandis" in tool_names:
                     return LLMResponse(
@@ -98,11 +165,12 @@ class RuleBasedLLMProvider(BaseLLMProvider):
                             "arguments": {
                                 "commodity_code": self._extract_commodity(user_text),
                                 "quantity_quintals": self._extract_quantity(user_text),
+                                "trade_intent": "sell",
                             }
                         }]
                     )
 
-            # 3. Market Depth & Liquidity intent
+            # 5. Market Depth & Liquidity intent
             if any(k in user_text for k in ["liquidity", "depth", "order book", "orderbook", "spread", "bids and asks", "5 level"]):
                 if "get_market_liquidity" in tool_names:
                     return LLMResponse(
@@ -115,7 +183,7 @@ class RuleBasedLLMProvider(BaseLLMProvider):
                         }]
                     )
 
-            # 4. Profitability & Deductions intent
+            # 6. Profitability & Deductions intent
             if any(k in user_text for k in ["profit", "deduction", "freight", "cess", "net in hand", "in-hand", "expenses"]):
                 if "calculate_net_profit" in tool_names:
                     return LLMResponse(
@@ -130,21 +198,23 @@ class RuleBasedLLMProvider(BaseLLMProvider):
                         }]
                     )
 
-            # 5. Price Forecast intent
+            # 7. Sell-or-wait forecast intent
             if any(k in user_text for k in ["forecast", "prediction", "predict", "next week", "trend", "should i sell", "wait or sell"]):
-                if "get_price_forecast" in tool_names:
+                if "get_sell_wait_recommendation" in tool_names:
                     return LLMResponse(
                         content="Executing time-series price trajectory analysis using historical APMC auction records...",
                         tool_calls=[{
-                            "name": "get_price_forecast",
+                            "name": "get_sell_wait_recommendation",
                             "arguments": {
                                 "commodity_code": self._extract_commodity(user_text),
+                                "market": self._extract_market(user_text),
                                 "horizon_days": 14,
+                                "quantity_quintals": self._extract_quantity(user_text),
                             }
                         }]
                     )
 
-            # 6. Verified Buyers intent
+            # 8. Verified Buyers intent
             if any(k in user_text for k in ["buyer", "buyers", "merchant", "institutional", "who will buy"]):
                 if "find_verified_buyers" in tool_names:
                     return LLMResponse(
