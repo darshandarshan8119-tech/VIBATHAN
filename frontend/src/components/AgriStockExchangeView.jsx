@@ -173,59 +173,6 @@ export default function AgriStockExchangeView({ activeTab, onTabChange }) {
     }
   ]);
 
-  // Dynamic Merchant Bids
-  const [merchantBids, setMerchantBids] = useState([
-    {
-      id: 'bid-1',
-      buyer: 'ITC Agri Business Division',
-      buyerType: 'Institutional Processor',
-      lotTarget: 'LOT-9821 (Wheat 120 Qtl)',
-      bidAmount: 2475,
-      marketRate: 2450,
-      time: '30 secs ago',
-      status: 'Leading Bid'
-    },
-    {
-      id: 'bid-2',
-      buyer: 'Adani Wilmar Ltd',
-      buyerType: 'National Edible Oils',
-      lotTarget: 'LOT-9823 (Mustard 90 Qtl)',
-      bidAmount: 5710,
-      marketRate: 5680,
-      time: '1 min ago',
-      status: 'Leading Bid'
-    },
-    {
-      id: 'bid-3',
-      buyer: 'Vardhman Textiles Procurement',
-      buyerType: 'Spinning Mill Buyer',
-      lotTarget: 'LOT-9822 (Cotton 85 Bales)',
-      bidAmount: 7150,
-      marketRate: 7140,
-      time: '3 mins ago',
-      status: 'Leading Bid'
-    },
-    {
-      id: 'bid-4',
-      buyer: 'Karnal Rice Exporters Consortium',
-      buyerType: 'Export House',
-      lotTarget: 'LOT-9819 (Paddy 200 Qtl)',
-      bidAmount: 4450,
-      marketRate: 4420,
-      time: '5 mins ago',
-      status: 'Leading Bid'
-    }
-  ]);
-
-  // Bidding Modal State (Wholesale Lots)
-  const [biddingLot, setBiddingLot] = useState(null);
-  const [bidBuyerName, setBidBuyerName] = useState('Patanjali Agro Sourcing');
-  const [bidOfferAmount, setBidOfferAmount] = useState(2480);
-  const [bidSubmitted, setBidSubmitted] = useState(false);
-
-  // Accept Deal State (Order Book)
-  const [acceptedDeal, setAcceptedDeal] = useState(null);
-
   // Kisan Auction Form State
   const [auctionCrop, setAuctionCrop] = useState('Wheat (Sharbati)');
   const [auctionFarmerName, setAuctionFarmerName] = useState('');
@@ -233,45 +180,6 @@ export default function AgriStockExchangeView({ activeTab, onTabChange }) {
   const [auctionReserveRate, setAuctionReserveRate] = useState(2450);
   const [auctionPincode, setAuctionPincode] = useState('');
   const [auctionSuccess, setAuctionSuccess] = useState(false);
-
-  // Place a Bid Handler
-  const handlePlaceBidSubmit = (e) => {
-    e.preventDefault();
-    confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
-    
-    const newBid = {
-      id: `bid-${Date.now()}`,
-      buyer: bidBuyerName,
-      buyerType: 'Verified Grain Buyer',
-      lotTarget: `${biddingLot.lotId} (${biddingLot.crop} ${biddingLot.quantity})`,
-      bidAmount: Number(bidOfferAmount),
-      marketRate: biddingLot.askingRate,
-      time: 'Just now',
-      status: 'Leading Bid'
-    };
-
-    setMerchantBids([newBid, ...merchantBids]);
-
-    setWholesaleLots(lots => lots.map(l => 
-      l.lotId === biddingLot.lotId 
-        ? { ...l, highestBid: Math.max(l.highestBid, Number(bidOfferAmount)), bidsReceived: l.bidsReceived + 1 }
-        : l
-    ));
-
-    setBidSubmitted(true);
-    setTimeout(() => {
-      setBidSubmitted(false);
-      setBiddingLot(null);
-      onTabChange('bids');
-    }, 1800);
-  };
-
-  // Farmer Accepts Bid Handler
-  const handleAcceptBid = (bid) => {
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-    setAcceptedDeal(bid);
-    setMerchantBids(bids => bids.map(b => b.id === bid.id ? { ...b, status: 'Deal Locked ✓' } : b));
-  };
 
   // Farmer Creates Auction Lot Handler
   const handleCreateAuction = (e) => {
@@ -2120,82 +2028,10 @@ export default function AgriStockExchangeView({ activeTab, onTabChange }) {
                     <span className="text-[10px] text-[#787774] block font-sans">({lot.bidsReceived} bids placed)</span>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setBiddingLot(lot);
-                      setBidOfferAmount(lot.highestBid + 15);
-                    }}
-                    className="px-4 py-2 rounded-full bg-[#1A1A1A] hover:bg-[#B45309] text-white text-xs font-bold font-heading transition-all shadow-xs">
-                    Place Bid
-                  </button>
-                </div>
-
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 4: MERCHANT BIDS (ORDER BOOK) */}
-      {activeTab === 'bids' && (
-        <div className="space-y-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl p-6 border border-black/[0.06] flex items-center justify-between shadow-xs">
-            <div>
-              <h3 className="font-heading font-extrabold text-base text-[#1A1A1A]">
-                Live Merchant Order Book &amp; Bid Depth
-              </h3>
-              <p className="text-xs text-[#787774] font-sans mt-0.5">
-                Real-time purchase bids placed by institutional millers. Farmers can click "Accept Offer" to lock instant deals.
-              </p>
-            </div>
-            <span className="text-xs font-mono font-bold text-[#166534] bg-[#10B981]/10 px-3.5 py-1.5 rounded-full border border-[#10B981]/20">
-              Direct Escrow Settlement Guaranteed
-            </span>
-          </div>
-
-          <div className="space-y-2.5">
-            {merchantBids.map((bid) => (
-              <div 
-                key={bid.id}
-                className="bg-white rounded-2xl p-4 sm:p-5 border border-black/[0.06] hover:border-black/20 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-heading font-extrabold text-sm sm:text-base text-[#1A1A1A]">
-                      {bid.buyer}
-                    </span>
-                    <span className="text-[10px] font-mono text-[#787774] bg-[#F7F6F2] px-2 py-0.5 rounded border border-black/[0.04]">
-                      {bid.buyerType}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#787774] font-sans mt-0.5">
-                    Targeting: <b className="text-[#1A1A1A]">{bid.lotTarget}</b> &bull; Placed {bid.time}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between sm:justify-end gap-5">
-                  <div className="text-left sm:text-right font-mono">
-                    <span className="text-[10px] text-[#787774] block font-sans">Bid Price / Qtl</span>
-                    <span className="text-lg font-bold text-[#166534]">
-                      ₹{bid.bidAmount.toLocaleString()}
-                    </span>
-                    <span className="text-[10px] text-[#1A1A1A] font-semibold block">
-                      (+₹{bid.bidAmount - bid.marketRate} above market)
-                    </span>
-                  </div>
-
-                  {bid.status === 'Deal Locked ✓' ? (
-                    <span className="text-[11px] font-bold font-heading bg-[#166534] text-white px-3.5 py-1.5 rounded-full flex items-center gap-1 shadow-xs">
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Deal Locked</span>
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => handleAcceptBid(bid)}
-                      className="px-4 py-2 rounded-full bg-[#1A1A1A] hover:bg-[#166534] text-white text-xs font-bold font-heading transition-colors shadow-xs">
-                      Accept Offer
-                    </button>
-                  )}
+                  <span className="px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-[11px] font-bold font-heading flex items-center gap-1.5 shadow-xs">
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Auction Active</span>
+                  </span>
                 </div>
 
               </div>
@@ -2394,119 +2230,6 @@ export default function AgriStockExchangeView({ activeTab, onTabChange }) {
               onClick={() => setSelectedArrival(null)}
               className="w-full py-3 rounded-full bg-[#1A1A1A] text-white font-bold text-xs hover:bg-[#B45309] transition-all">
               Close Weighbridge Monitor
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: PLACE A MERCHANT BID ON WHOLESALE LOT */}
-      {biddingLot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-black/[0.08] shadow-2xl relative animate-in zoom-in-95">
-            <button 
-              onClick={() => setBiddingLot(null)}
-              className="absolute top-4 right-4 text-[#787774] hover:text-[#1A1A1A] p-2">
-              <X className="w-4 h-4" />
-            </button>
-
-            {bidSubmitted ? (
-              <div className="text-center py-8 space-y-3">
-                <div className="w-14 h-14 rounded-full bg-[#10B981]/15 text-[#166534] flex items-center justify-center text-2xl mx-auto font-bold">
-                  ✓
-                </div>
-                <h3 className="text-xl font-bold font-heading text-[#1A1A1A]">Bid Submitted to Farmer!</h3>
-                <p className="text-xs text-[#787774]">
-                  Your purchase offer of <b>₹{bidOfferAmount}/Qtl</b> on {biddingLot.lotId} has been added to the Order Book.
-                </p>
-              </div>
-            ) : (
-              <div>
-                <span className="text-[10px] font-mono text-[#B45309] uppercase tracking-wider font-bold block mb-1">
-                  Merchant Bidding Portal
-                </span>
-                <h3 className="text-xl font-bold font-heading text-[#1A1A1A]">
-                  Place Purchase Bid on {biddingLot.lotId}
-                </h3>
-                <p className="text-xs text-[#787774] mb-4">
-                  {biddingLot.crop} &bull; {biddingLot.quantity} &bull; Farmer: {biddingLot.farmer}
-                </p>
-
-                <form onSubmit={handlePlaceBidSubmit} className="space-y-4 text-xs">
-                  <div>
-                    <label className="block text-[#1A1A1A] font-bold mb-1">Buyer Organization:</label>
-                    <input 
-                      type="text"
-                      required
-                      value={bidBuyerName}
-                      onChange={(e) => setBidBuyerName(e.target.value)}
-                      className="w-full bg-[#F7F6F2] border border-black/[0.08] rounded-xl px-3.5 py-2.5 font-semibold text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[#1A1A1A] font-bold mb-1">
-                      Your Offer Rate (₹ / Quintal):
-                    </label>
-                    <input 
-                      type="number"
-                      required
-                      min={biddingLot.askingRate}
-                      value={bidOfferAmount}
-                      onChange={(e) => setBidOfferAmount(e.target.value)}
-                      className="w-full bg-[#F7F6F2] border border-black/[0.08] rounded-xl px-3.5 py-2.5 font-mono font-bold text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A]"
-                    />
-                    <span className="text-[10px] text-[#787774] block mt-1">
-                      Farmer Reserve: ₹{biddingLot.askingRate} &bull; Current Highest: ₹{biddingLot.highestBid}
-                    </span>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-3.5 rounded-full bg-[#1A1A1A] hover:bg-[#166534] text-white font-bold text-xs transition-all shadow-md font-heading">
-                    Submit Binding Purchase Offer
-                  </button>
-                </form>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: DEAL LOCKED CELEBRATION RECEIPT */}
-      {acceptedDeal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-black/[0.08] shadow-2xl text-center space-y-4 relative animate-in zoom-in-95">
-            <div className="w-16 h-16 rounded-full bg-[#10B981]/15 text-[#166534] flex items-center justify-center text-3xl mx-auto font-bold">
-              ✓
-            </div>
-            <h3 className="text-2xl font-extrabold font-heading text-[#1A1A1A]">
-              Deal Locked &amp; Confirmed!
-            </h3>
-            <div className="bg-[#F7F6F2] p-4 rounded-2xl text-xs text-left space-y-2 font-mono border border-black/[0.05]">
-              <div className="flex justify-between">
-                <span className="text-[#787774]">Buyer:</span>
-                <span className="font-bold text-[#1A1A1A]">{acceptedDeal.buyer}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#787774]">Target Lot:</span>
-                <span className="font-bold text-[#1A1A1A]">{acceptedDeal.lotTarget}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#787774]">Settlement Rate:</span>
-                <span className="font-bold text-[#166534]">₹{acceptedDeal.bidAmount}/Quintal</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#787774]">Payment Mode:</span>
-                <span className="font-bold text-[#1A1A1A]">Direct RTGS within 2h</span>
-              </div>
-            </div>
-            <p className="text-xs text-[#787774]">
-              Digital sale contract dispatched to farmer SMS. Buyer truck will arrive at farm gate for pickup.
-            </p>
-            <button
-              onClick={() => setAcceptedDeal(null)}
-              className="w-full py-3.5 rounded-full bg-[#1A1A1A] text-white font-bold text-xs font-heading hover:bg-[#B45309] transition-all">
-              Close Confirmation Receipt
             </button>
           </div>
         </div>

@@ -53,13 +53,6 @@ export default function Footer({ onSelectMandiTab }) {
               </li>
               <li>
                 <button 
-                  onClick={() => onSelectMandiTab && onSelectMandiTab('bids')} 
-                  className="hover:text-white transition-colors cursor-pointer text-left">
-                  Institutional Merchant Bids
-                </button>
-              </li>
-              <li>
-                <button 
                   onClick={() => onSelectMandiTab && onSelectMandiTab('contracts')} 
                   className="hover:text-white transition-colors cursor-pointer text-left">
                   Contract Notes &amp; Escrow Ledger
@@ -98,26 +91,21 @@ export default function Footer({ onSelectMandiTab }) {
             <ul className="space-y-2 text-xs font-medium text-[#B0AEA8]">
               <li>e-NAM Compatible</li>
               <li>AGMARK Moisture Assays</li>
-              <li>e-NWR Receipts</li>
-              <li>Axis Escrow Vault</li>
-              <li>T+0 RTGS Settlement</li>
+              <li>T+0 RTGS Direct to Farmer</li>
+              <li>Bank-Guaranteed Settlement</li>
+              <li>Ministry of Agriculture Compliance</li>
             </ul>
           </div>
 
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-[#8E8E8E]">
-          <div>
-            <span>&copy; 2026 AgriMart Market Intelligence. All rights reserved.</span>
-          </div>
-
-          <div className="flex items-center gap-4 text-[#8E8E8E]">
-            <span>Regulated APMC Data Feeds</span>
-            <span>&bull;</span>
-            <span>Zero Brokerage to Cultivators</span>
-            <span>&bull;</span>
-            <span>Encrypted Member Session</span>
+        {/* Bottom Rights Bar */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#8E8E8E] gap-4">
+          <p>© 2026 AgriMart National APMC Mandi Commodity Exchange. All rights reserved.</p>
+          <div className="flex items-center gap-6">
+            <span className="hover:text-white transition-colors">Security &amp; Encryption</span>
+            <span className="hover:text-white transition-colors">Statutory Mandi By-Laws</span>
+            <span className="hover:text-white transition-colors">Axis Escrow Charter</span>
           </div>
         </div>
 
@@ -125,4 +113,3 @@ export default function Footer({ onSelectMandiTab }) {
     </footer>
   );
 }
-

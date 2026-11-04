@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { 
   FileText, ShieldCheck, CheckCircle2, Clock, Filter, ArrowRight,
-  ExternalLink, Printer, Sparkles, Scale, Search, Download
+  ExternalLink, Printer, Scale, Search, Download, BarChart2
 } from 'lucide-react';
 import { SAMPLE_CONTRACT_TRANSACTIONS, TRANSACTION_LIFECYCLE_STEPS } from '../data/mockData';
 
@@ -32,8 +32,8 @@ export default function TransactionsPage({ onReturnToAssistant }) {
         <button
           onClick={onReturnToAssistant}
           className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 hover:bg-[#C26747] text-white text-[11px] font-bold font-heading transition-all cursor-pointer">
-          <Sparkles className="w-3.5 h-3.5 text-[#D4A373]" />
-          <span>Back to AI Copilot</span>
+          <BarChart2 className="w-3.5 h-3.5 text-[#D4A373]" />
+          <span>Return to Market Terminal</span>
         </button>
       </div>
 
@@ -49,115 +49,100 @@ export default function TransactionsPage({ onReturnToAssistant }) {
             <h1 className="text-2xl sm:text-3xl font-extrabold font-heading text-[#121212] tracking-tight">
               Contract Notes &amp; Settlement History
             </h1>
-            <p className="text-xs text-slate-500 font-sans mt-0.5">
-              Live status of trade matched lots, axis escrow deposits, electronic warehouse receipts (e-NWR) and payment releases.
+            <p className="text-xs text-[#787774] mt-1 font-sans">
+              Statutory Form-J procurement vouchers digitally signed under Mandi Bylaws &bull; Instant RTGS release upon Weighbridge certification.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
-              <input
+              <Search className="w-3.5 h-3.5 text-[#8E8E8E] absolute left-3 top-1/2 -translate-y-1/2" />
+              <input 
                 type="text"
+                placeholder="Search contract, crop, buyer..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search contract, buyer..."
-                className="bg-white border border-black/[0.1] rounded-full pl-9 pr-4 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#121212] w-48 sm:w-64"
+                className="pl-8 pr-4 py-2 rounded-full bg-white border border-black/[0.08] text-xs font-medium text-[#121212] placeholder-[#8E8E8E] focus:outline-none focus:border-[#121212] w-56 sm:w-64"
               />
             </div>
           </div>
         </div>
 
-        {/* Transactions Table / Cards */}
-        <div className="space-y-4">
-          {filtered.map((t) => (
-            <div 
-              key={t.contractNumber}
-              className="p-5 rounded-2xl bg-white border border-black/[0.08] shadow-xs hover:shadow-md transition-all space-y-4">
-              
-              {/* Row 1: Contract Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-black/[0.06]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 font-mono font-bold text-xs">
-                    {t.commodity.slice(0, 3).toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-heading font-extrabold text-base text-slate-900">
-                        {t.cropFullName || t.commodity}
-                      </h3>
-                      <span className="px-2 py-0.5 rounded-md bg-[#FAF9F5] border border-black/[0.06] text-[10px] font-mono text-slate-600 font-bold">
-                        {t.contractNumber}
-                      </span>
-                    </div>
-                    <span className="text-xs text-slate-500">{t.mandi} &bull; Lot: {t.lotRef}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-mono font-bold border border-emerald-200">
-                    {t.status}
-                  </span>
-                  <span className="text-xs font-mono font-bold text-slate-900">
-                    ₹{Number(t.financials?.totalEscrow || 0).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Row 2: 6-Step Visual Lifecycle */}
-              <div className="py-2">
-                <div className="flex items-center justify-between relative max-w-2xl">
-                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-200 -translate-y-1/2 z-0"></div>
-                  {TRANSACTION_LIFECYCLE_STEPS.map((step) => {
-                    const isCompleted = step.id <= t.currentStep;
-                    const isCurrent = step.id === t.currentStep;
-                    return (
-                      <div key={step.id} className="relative z-10 flex flex-col items-center">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-mono font-bold transition-all ${
-                          isCurrent 
-                            ? 'bg-[#C26747] text-white ring-4 ring-[#C26747]/20 scale-110' 
-                            : isCompleted 
-                            ? 'bg-emerald-600 text-white' 
-                            : 'bg-white border-2 border-slate-300 text-slate-400'
-                        }`}>
-                          {isCompleted ? '✓' : step.id}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex justify-between text-[10px] text-slate-400 font-mono mt-2 max-w-2xl">
-                  <span>Created</span>
-                  <span>Escrow</span>
-                  <span>Delivery</span>
-                  <span>Weighment</span>
-                  <span>Settlement</span>
-                  <span>RTGS</span>
-                </div>
-              </div>
-
-              {/* Row 3: Trade Details & Action Buttons */}
-              <div className="pt-3 border-t border-black/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-4 text-slate-600 text-[11px] font-mono">
-                  <span>Buyer: <strong className="text-slate-900">{t.buyer}</strong></span>
-                  <span>&bull;</span>
-                  <span>Quantity: <strong>{t.quantity} {t.unit}</strong></span>
-                  <span>&bull;</span>
-                  <span>Rate: <strong>₹{t.rate}/Qtl</strong></span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setActiveModalContract(t)}
-                    className="px-3 py-1.5 rounded-full bg-[#121212] hover:bg-[#C26747] text-white text-[11px] font-bold font-heading transition-all flex items-center gap-1 cursor-pointer">
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>View Electronic Note</span>
-                  </button>
-                </div>
-              </div>
-
-            </div>
+        {/* Status Filters */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          {['ALL', 'SETTLED', 'ESCROW_FUNDED', 'DISPATCHED'].map((st) => (
+            <button
+              key={st}
+              onClick={() => setFilterStatus(st)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-mono font-bold transition-all cursor-pointer ${
+                filterStatus === st
+                  ? 'bg-[#121212] text-white shadow-xs'
+                  : 'bg-white hover:bg-[#F2F0EB] text-[#5A5A5A] border border-black/[0.06]'
+              }`}>
+              {st === 'ALL' ? 'All Contracts' : st.replace('_', ' ')}
+            </button>
           ))}
+        </div>
+
+        {/* Contract Table */}
+        <div className="bg-white rounded-3xl border border-black/[0.06] shadow-xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-sans">
+              <thead className="bg-[#FBFBF9] border-b border-black/[0.06] text-[#6E6E6E] font-mono uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th className="px-5 py-3.5">Contract Ref</th>
+                  <th className="px-5 py-3.5">Commodity &amp; Grade</th>
+                  <th className="px-5 py-3.5">Buyer / Processor</th>
+                  <th className="px-5 py-3.5">Volume</th>
+                  <th className="px-5 py-3.5">Gross Settlement</th>
+                  <th className="px-5 py-3.5">Status</th>
+                  <th className="px-5 py-3.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-black/[0.04]">
+                {filtered.map((item) => (
+                  <tr key={item.id} className="hover:bg-[#FBFBF9]/80 transition-colors">
+                    <td className="px-5 py-4 font-mono font-bold text-[#121212]">
+                      {item.contractNumber}
+                      <span className="block text-[10px] font-normal text-[#8E8E8E]">{item.date}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="font-heading font-extrabold text-[#121212] text-sm block">
+                        {item.commodity}
+                      </span>
+                      <span className="text-[10px] text-[#8E8E8E] font-mono">{item.mandi}</span>
+                    </td>
+                    <td className="px-5 py-4 font-medium text-[#404040]">
+                      {item.buyer}
+                    </td>
+                    <td className="px-5 py-4 font-mono font-semibold text-[#121212]">
+                      {item.quantity} Qtl
+                    </td>
+                    <td className="px-5 py-4 font-mono font-bold text-[#166534] text-sm">
+                      ₹{item.totalAmount.toLocaleString()}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${
+                        item.status === 'SETTLED'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200'
+                      }`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                        <span>{item.status.replace('_', ' ')}</span>
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <button
+                        onClick={() => setActiveModalContract(item)}
+                        className="px-3 py-1.5 rounded-full bg-[#F5F4F0] hover:bg-[#121212] hover:text-white text-xs font-mono font-bold transition-all border border-black/[0.06] cursor-pointer">
+                        View Note
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
@@ -165,72 +150,63 @@ export default function TransactionsPage({ onReturnToAssistant }) {
       {/* Contract Detail Modal */}
       {activeModalContract && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl border border-black/[0.1] max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-black/[0.08]">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-black/[0.08] shadow-2xl relative space-y-4">
+            <div className="flex items-center justify-between border-b border-black/[0.06] pb-3">
               <div>
-                <span className="text-[10px] uppercase font-mono text-slate-400 font-bold block">Electronic Contract Note</span>
-                <h3 className="font-heading font-extrabold text-lg text-slate-900">{activeModalContract.contractNumber}</h3>
+                <span className="text-[10px] font-mono text-[#C26747] font-bold uppercase tracking-wider block">
+                  APMC Statutory Contract Note
+                </span>
+                <h3 className="font-heading font-extrabold text-lg text-[#121212]">
+                  {activeModalContract.contractNumber}
+                </h3>
               </div>
               <button 
                 onClick={() => setActiveModalContract(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 text-sm font-bold">
+                className="text-[#8E8E8E] hover:text-[#121212] p-1.5 rounded-full hover:bg-black/5 cursor-pointer">
                 ✕
               </button>
             </div>
 
-            <div className="text-xs space-y-2 font-mono">
+            <div className="space-y-3 font-mono text-xs">
               <div className="flex justify-between py-1 border-b border-black/[0.04]">
-                <span className="text-slate-500">Order ID:</span>
-                <span className="font-bold text-slate-900">{activeModalContract.orderId}</span>
+                <span className="text-[#787774]">Commodity:</span>
+                <span className="font-bold text-[#121212]">{activeModalContract.commodity}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-black/[0.04]">
-                <span className="text-slate-500">Escrow Reference:</span>
-                <span className="font-bold text-[#C26747]">{activeModalContract.escrowReference}</span>
+                <span className="text-[#787774]">Procuring Buyer:</span>
+                <span className="font-bold text-[#121212]">{activeModalContract.buyer}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-black/[0.04]">
-                <span className="text-slate-500">Commodity &amp; Grade:</span>
-                <span className="font-bold text-slate-900">{activeModalContract.cropFullName}</span>
+                <span className="text-[#787774]">Mandi Weighbridge:</span>
+                <span className="font-bold text-[#121212]">{activeModalContract.mandi}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-black/[0.04]">
-                <span className="text-slate-500">Trade Volume:</span>
-                <span className="font-bold text-slate-900">{activeModalContract.quantity} {activeModalContract.unit} @ ₹{activeModalContract.rate}/Qtl</span>
+                <span className="text-[#787774]">Certified Volume:</span>
+                <span className="font-bold text-[#121212]">{activeModalContract.quantity} Qtl</span>
               </div>
               <div className="flex justify-between py-1 border-b border-black/[0.04]">
-                <span className="text-slate-500">Produce Subtotal:</span>
-                <span className="font-bold text-slate-900">₹{Number(activeModalContract.financials?.produceSubtotal || 0).toLocaleString()}</span>
+                <span className="text-[#787774]">Rate per Quintal:</span>
+                <span className="font-bold text-[#166534]">₹{activeModalContract.ratePerQtl}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-black/[0.04]">
-                <span className="text-slate-500">APMC Mandi Cess (1.5%):</span>
-                <span className="font-bold text-slate-900">₹{Number(activeModalContract.financials?.mandiCess || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-black/[0.04]">
-                <span className="text-slate-500">Escrow Fee (0.5%):</span>
-                <span className="font-bold text-slate-900">₹{Number(activeModalContract.financials?.escrowFee || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between pt-2 text-sm font-bold border-t border-black/[0.08]">
-                <span>Total Escrow Secured:</span>
-                <span className="text-emerald-700">₹{Number(activeModalContract.financials?.totalEscrow || 0).toLocaleString()}</span>
+                <span className="text-[#787774]">Total Escrow Payout:</span>
+                <span className="font-extrabold text-base text-[#166534]">₹{activeModalContract.totalAmount.toLocaleString()}</span>
               </div>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl text-[11px] text-slate-500 font-sans leading-relaxed">
-              {activeModalContract.disclaimer}
+            <div className="p-3 rounded-2xl bg-[#F8F7F4] border border-black/[0.06] text-[11px] font-mono text-[#5A5A5A] flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>SHA-256 Escrow Stamp: 0x8f2a...91b4 &bull; RTGS Settled</span>
             </div>
 
-            <div className="pt-2 flex justify-end">
-              <button
-                onClick={() => {
-                  window.print();
-                }}
-                className="px-4 py-2 rounded-full bg-[#121212] hover:bg-[#C26747] text-white text-xs font-bold font-heading transition-all flex items-center gap-1.5 cursor-pointer">
-                <Printer className="w-3.5 h-3.5" />
-                <span>Print / Download Slip</span>
-              </button>
-            </div>
+            <button
+              onClick={() => setActiveModalContract(null)}
+              className="w-full py-3 rounded-full bg-[#121212] text-white font-heading font-extrabold text-xs hover:bg-[#C26747] transition-all cursor-pointer">
+              Close Contract Note
+            </button>
           </div>
         </div>
       )}
-
     </div>
   );
 }

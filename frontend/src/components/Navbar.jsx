@@ -3,7 +3,8 @@ import React from 'react';
 import { 
   Search, User, Scale, FileText, Gavel, LogOut, ArrowLeft,
   Activity, TrendingUp, Layers, CheckCircle2, ChevronRight,
-  Bot, BarChart2, ReceiptText, ShieldCheck, Sparkles, ExternalLink
+  Bot, BarChart2, ReceiptText, ShieldCheck, Sparkles, ExternalLink,
+  Sprout, Microscope
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -14,7 +15,7 @@ export default function Navbar({
   mandiTab,
   onSelectMandiTab,
   onExitToLanding,
-  activeAppView = 'assistant',
+  activeAppView = 'terminal',
   onNavigateView = () => {}
 }) {
   return (
@@ -41,26 +42,11 @@ export default function Navbar({
           </div>
 
           {/* Center: First-Class Sub-Module Switcher (Separate Dedicated Pages) */}
-          <div className="flex items-center p-1 rounded-full bg-[#F2F0EB] border border-black/[0.07] shadow-xs">
-            {/* Module 1: AI Copilot */}
-            <button
-              onClick={() => onNavigateView('assistant')}
-              className={`flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-heading font-extrabold transition-all cursor-pointer ${
-                activeAppView === 'assistant'
-                  ? 'bg-[#121212] text-white shadow-md'
-                  : 'text-[#5A5A5A] hover:text-[#121212] hover:bg-black/[0.04]'
-              }`}>
-              <Bot className={`w-3.5 h-3.5 ${activeAppView === 'assistant' ? 'text-[#D4A373]' : 'text-[#8E8E8E]'}`} />
-              <span>AI Copilot</span>
-              {activeAppView === 'assistant' && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              )}
-            </button>
-
-            {/* Module 2: Market Terminal */}
+          <div className="flex items-center p-1 rounded-full bg-[#F2F0EB] border border-black/[0.07] shadow-xs overflow-x-auto no-scrollbar">
+            {/* Module 1: Market Terminal */}
             <button
               onClick={() => onNavigateView('terminal')}
-              className={`flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-heading font-extrabold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-heading font-extrabold transition-all cursor-pointer shrink-0 ${
                 activeAppView === 'terminal'
                   ? 'bg-[#121212] text-white shadow-md'
                   : 'text-[#5A5A5A] hover:text-[#121212] hover:bg-black/[0.04]'
@@ -69,10 +55,35 @@ export default function Navbar({
               <span>Market Terminal</span>
             </button>
 
-            {/* Module 3: Transactions & Escrow */}
+            {/* Module 2: Crop Disease Clinic */}
+            <button
+              onClick={() => onNavigateView('disease')}
+              className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-heading font-extrabold transition-all cursor-pointer shrink-0 ${
+                activeAppView === 'disease'
+                  ? 'bg-[#121212] text-white shadow-md'
+                  : 'text-[#5A5A5A] hover:text-[#121212] hover:bg-black/[0.04]'
+              }`}>
+              <Activity className={`w-3.5 h-3.5 ${activeAppView === 'disease' ? 'text-[#D4A373]' : 'text-[#8E8E8E]'}`} />
+              <span>Disease Clinic</span>
+            </button>
+
+            {/* Module 3: Crop Recommendation */}
+            <button
+              onClick={() => onNavigateView('recommendation')}
+              className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-heading font-extrabold transition-all cursor-pointer shrink-0 ${
+                activeAppView === 'recommendation'
+                  ? 'bg-[#121212] text-white shadow-md'
+                  : 'text-[#5A5A5A] hover:text-[#121212] hover:bg-black/[0.04]'
+              }`}>
+              <Sprout className={`w-3.5 h-3.5 ${activeAppView === 'recommendation' ? 'text-[#D4A373]' : 'text-[#8E8E8E]'}`} />
+              <span className="hidden sm:inline">Crop Recommendation</span>
+              <span className="sm:hidden">Advisor</span>
+            </button>
+
+            {/* Module 4: Transactions & Escrow */}
             <button
               onClick={() => onNavigateView('transactions')}
-              className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-heading font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-heading font-bold transition-all cursor-pointer shrink-0 ${
                 activeAppView === 'transactions'
                   ? 'bg-[#121212] text-white shadow-md'
                   : 'text-[#5A5A5A] hover:text-[#121212] hover:bg-black/[0.04]'
@@ -82,10 +93,10 @@ export default function Navbar({
               <span className="md:hidden">Ledger</span>
             </button>
 
-            {/* Module 4: Profile */}
+            {/* Module 5: Profile */}
             <button
               onClick={() => onNavigateView('profile')}
-              className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-heading font-bold transition-all cursor-pointer ${
+              className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-heading font-bold transition-all cursor-pointer shrink-0 ${
                 activeAppView === 'profile'
                   ? 'bg-[#121212] text-white shadow-md'
                   : 'text-[#5A5A5A] hover:text-[#121212] hover:bg-black/[0.04]'
@@ -120,7 +131,7 @@ export default function Navbar({
                       {user.name ? user.name.split(' ')[0] : 'Kisan'}
                     </span>
                     <span className="text-[9px] uppercase font-mono text-[#787774] capitalize leading-tight">
-                      {user.role || 'Member'}
+                      {user.role || 'Farmer'}
                     </span>
                   </div>
                 </button>
@@ -188,17 +199,6 @@ export default function Navbar({
                 </button>
 
                 <button
-                  onClick={() => onSelectMandiTab('bids')}
-                  className={`py-1 relative transition-colors cursor-pointer ${
-                    mandiTab === 'bids' ? 'text-[#1A1A1A] font-bold' : 'text-[#6B6A66] hover:text-[#1A1A1A]'
-                  }`}>
-                  <span>Merchant Bids</span>
-                  {mandiTab === 'bids' && (
-                    <span className="absolute -bottom-2 left-0 right-0 h-0.5 bg-[#C26747] rounded-full" />
-                  )}
-                </button>
-
-                <button
                   onClick={() => onSelectMandiTab('contracts')}
                   className={`py-1 relative flex items-center gap-1.5 transition-colors cursor-pointer ${
                     mandiTab === 'contracts' ? 'text-[#1A1A1A] font-bold' : 'text-[#6B6A66] hover:text-[#1A1A1A]'
@@ -223,31 +223,42 @@ export default function Navbar({
                 </button>
               </div>
 
-              <button
-                onClick={() => onNavigateView('assistant')}
-                className="hidden md:flex items-center gap-1 text-[11px] font-mono font-bold text-[#C26747] hover:underline cursor-pointer">
-                <span>Switch to AI Copilot</span>
-                <ChevronRight className="w-3 h-3" />
-              </button>
+              <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-[#787774]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                <span>AGMARKNET Benchmark Synced</span>
+              </div>
             </div>
           )}
 
-          {/* SCENARIO B: Inside AI Copilot -> Show Telemetry Status & Direct Terminal Jump Pills */}
-          {activeAppView === 'assistant' && (
+          {/* SCENARIO B: Inside Disease Clinic */}
+          {activeAppView === 'disease' && (
             <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-3 text-[11px] font-mono text-[#5A5A5A]">
-                <span className="flex items-center gap-1.5 font-bold text-[#121212]">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Agentic Copilot Active</span>
-                </span>
-                <span>&bull;</span>
-                <span className="hidden sm:inline">6 Regional APMC Electronic Feeds</span>
-                <span className="hidden sm:inline">&bull;</span>
-                <span className="hidden md:inline">Deterministic 1.5% Cess &amp; Freight Tariffs</span>
+              <div className="flex items-center gap-2 text-[11px] font-mono text-[#5A5A5A]">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Plant Pathology Vision Engine &bull; AI Leaf Biomarker Diagnostics &bull; Verified Chemical &amp; Organic Protocols</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono text-[#8E8E8E] hidden lg:inline">Quick Jump to Terminal:</span>
+                <button
+                  onClick={() => onNavigateView('recommendation')}
+                  className="px-2.5 py-0.5 rounded-full bg-[#F5F4F0] hover:bg-[#EBE8E2] text-[11px] font-mono font-bold text-[#121212] border border-black/[0.06] flex items-center gap-1 transition-all cursor-pointer">
+                  <Sprout className="w-3 h-3 text-[#C26747]" />
+                  <span>Soil &amp; Crop Advisor</span>
+                  <ChevronRight className="w-3 h-3 text-[#787774]" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* SCENARIO C: Inside Crop Recommendation */}
+          {activeAppView === 'recommendation' && (
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2 text-[11px] font-mono text-[#5A5A5A]">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Soil Chemistry &amp; Agro-Climatic Intelligence &bull; N-P-K &amp; Precipitation Matching &bull; Yield Projection</span>
+              </div>
+
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
                     onSelectMandiTab('exchange');
@@ -255,23 +266,14 @@ export default function Navbar({
                   }}
                   className="px-2.5 py-0.5 rounded-full bg-[#F5F4F0] hover:bg-[#EBE8E2] text-[11px] font-mono font-bold text-[#121212] border border-black/[0.06] flex items-center gap-1 transition-all cursor-pointer">
                   <BarChart2 className="w-3 h-3 text-[#C26747]" />
-                  <span>5-Level Order Book</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    onSelectMandiTab('auction');
-                    onNavigateView('terminal');
-                  }}
-                  className="px-2.5 py-0.5 rounded-full bg-[#F5F4F0] hover:bg-[#EBE8E2] text-[11px] font-mono font-bold text-[#121212] border border-black/[0.06] flex items-center gap-1 transition-all cursor-pointer">
-                  <Gavel className="w-3 h-3 text-[#C26747]" />
-                  <span>Kisan Auction</span>
+                  <span>Check Mandi Rates</span>
+                  <ChevronRight className="w-3 h-3 text-[#787774]" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* SCENARIO C: Inside Transactions -> Show Escrow Status */}
+          {/* SCENARIO D: Inside Transactions -> Show Escrow Status */}
           {activeAppView === 'transactions' && (
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2 text-[11px] font-mono text-[#5A5A5A]">
@@ -279,25 +281,25 @@ export default function Navbar({
                 <span>Statutory APMC Contract Notes &bull; T+0 RTGS Settlement Ledger &bull; SHA-256 Escrow Hashes</span>
               </div>
               <button
-                onClick={() => onNavigateView('assistant')}
+                onClick={() => onNavigateView('terminal')}
                 className="flex items-center gap-1 text-[11px] font-mono font-bold text-[#C26747] hover:underline cursor-pointer">
-                <span>Return to AI Copilot</span>
+                <span>Return to Market Terminal</span>
                 <ChevronRight className="w-3 h-3" />
               </button>
             </div>
           )}
 
-          {/* SCENARIO D: Inside Profile */}
+          {/* SCENARIO E: Inside Profile */}
           {activeAppView === 'profile' && (
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2 text-[11px] font-mono text-[#5A5A5A]">
                 <User className="w-3.5 h-3.5 text-[#C26747]" />
-                <span>Accredited Cultivator &amp; APMC Merchant Institutional Profile</span>
+                <span>Accredited Cultivator &amp; APMC Producer Profile</span>
               </div>
               <button
-                onClick={() => onNavigateView('assistant')}
+                onClick={() => onNavigateView('terminal')}
                 className="flex items-center gap-1 text-[11px] font-mono font-bold text-[#C26747] hover:underline cursor-pointer">
-                <span>Return to AI Copilot</span>
+                <span>Return to Market Terminal</span>
                 <ChevronRight className="w-3 h-3" />
               </button>
             </div>

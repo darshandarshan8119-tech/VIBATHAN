@@ -9,6 +9,8 @@ import ForecastCard from './cards/ForecastCard';
 import BuyerCard from './cards/BuyerCard';
 import BookingCard from './cards/BookingCard';
 import TransactionCard from './cards/TransactionCard';
+import DiseaseScanCard from './cards/DiseaseScanCard';
+import CropRecommendationCard from './cards/CropRecommendationCard';
 
 export default function MessageBubble({ message, onAction }) {
   const isUser = message.role === 'user';
@@ -33,6 +35,10 @@ export default function MessageBubble({ message, onAction }) {
         return <BookingCard key={card.data?.bookingId || Math.random()} data={card.data} onAction={onAction} />;
       case 'transaction':
         return <TransactionCard key={card.data?.orderId || Math.random()} data={card.data} onAction={onAction} />;
+      case 'disease':
+        return <DiseaseScanCard key={card.data?.diseaseName || Math.random()} data={card.data} onAction={onAction} />;
+      case 'recommendation':
+        return <CropRecommendationCard key={card.data?.topCrop || Math.random()} data={card.data} onAction={onAction} />;
       default:
         return null;
     }

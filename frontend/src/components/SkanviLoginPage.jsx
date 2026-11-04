@@ -343,13 +343,9 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
                   <label className="block text-[#121212] font-bold mb-1 font-heading">
                     Account Role
                   </label>
-                  <select
-                    value={regRole}
-                    onChange={(e) => setRegRole(e.target.value)}
-                    className="w-full bg-white border border-black/[0.1] rounded-xl px-3 py-2.5 text-xs font-semibold text-[#121212] focus:outline-none focus:border-[#121212]">
-                    <option value="farmer">Farmer / Kisan</option>
-                    <option value="merchant">Merchant / APMC Trader</option>
-                  </select>
+                  <div className="w-full bg-[#F5F4F0] border border-black/[0.1] rounded-xl px-3 py-2.5 text-xs font-bold text-[#121212] flex items-center gap-1.5">
+                    <span>🌾 Farmer / Cultivator</span>
+                  </div>
                 </div>
 
                 <div>
@@ -423,14 +419,8 @@ export default function SkanviLoginPage({ onBackToPortal, onLoginSuccess }) {
               <button
                 type="button"
                 onClick={() => handleFastDemoLogin('farmer')}
-                className="px-3.5 py-1.5 rounded-full bg-white hover:bg-black hover:text-white border border-black/[0.1] text-xs font-bold font-heading transition-all shadow-xs shrink-0 cursor-pointer">
-                🌾 Kisan
-              </button>
-              <button
-                type="button"
-                onClick={() => handleFastDemoLogin('merchant')}
-                className="px-3.5 py-1.5 rounded-full bg-white hover:bg-black hover:text-white border border-black/[0.1] text-xs font-bold font-heading transition-all shadow-xs shrink-0 cursor-pointer">
-                🏢 Merchant
+                className="px-4 py-1.5 rounded-full bg-white hover:bg-black hover:text-white border border-black/[0.1] text-xs font-bold font-heading transition-all shadow-xs shrink-0 cursor-pointer flex items-center gap-1.5">
+                <span>🌾 Kisan Producer Demo</span>
               </button>
             </div>
           </div>

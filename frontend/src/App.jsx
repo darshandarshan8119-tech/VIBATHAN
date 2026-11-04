@@ -4,10 +4,12 @@ import MarketLandingPage from './components/MarketLandingPage';
 import SkanviLoginPage from './components/SkanviLoginPage';
 import MandiTicker from './components/MandiTicker';
 import Navbar from './components/Navbar';
-import AssistantPage from './pages/AssistantPage';
 import MarketTerminalPage from './pages/MarketTerminalPage';
+import DiseaseDetectionPage from './pages/DiseaseDetectionPage';
+import CropRecommendationPage from './pages/CropRecommendationPage';
 import TransactionsPage from './pages/TransactionsPage';
 import ProfilePage from './pages/ProfilePage';
+import FloatingCopilotDrawer from './assistant/FloatingCopilotDrawer';
 import SearchModal from './components/SearchModal';
 import Footer from './components/Footer';
 import AestheticTransitionLoader from './components/AestheticTransitionLoader';
@@ -18,8 +20,8 @@ export default function App() {
   // Master View: 'landing' (Public Mandi Portal) | 'login' (Dedicated Member Access) | 'app' (Authenticated Platform)
   const [currentView, setCurrentView] = useState('landing');
 
-  // Authenticated Sub-view: 'assistant' (Default AI Copilot) | 'terminal' (Market Terminal) | 'transactions' | 'profile'
-  const [activeAppView, setActiveAppView] = useState('assistant');
+  // Authenticated Sub-view: 'terminal' (Default) | 'disease' | 'recommendation' | 'transactions' | 'profile'
+  const [activeAppView, setActiveAppView] = useState('terminal');
 
   // Market Terminal Active Tab
   const [mandiTab, setMandiTab] = useState('exchange');
@@ -53,14 +55,14 @@ export default function App() {
     }, 3200);
   };
 
-  // Successful Login Handler -> Enters Assistant Page as Default
+  // Successful Login Handler -> Enters Market Terminal as Default View
   const handleLoginSuccess = (userData) => {
     setUser(userData);
     setIsTransitioning(true);
-    setTransitionMessage(`Authenticating Member Session for ${userData.name}...`);
+    setTransitionMessage(`Authenticating Kisan Session for ${userData.name}...`);
 
     setTimeout(() => {
-      setActiveAppView('assistant');
+      setActiveAppView('terminal');
       setCurrentView('app');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => {
@@ -151,7 +153,7 @@ export default function App() {
         <MarketLandingPage 
           onEnterPlatform={() => {
             setIsTransitioning(true);
-            setTransitionMessage('Opening Secure Agentic Access...');
+            setTransitionMessage('Opening Secure Platform Access...');
             setTimeout(() => {
               setCurrentView('login');
               window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -163,7 +165,7 @@ export default function App() {
     );
   }
 
-  // VIEW 3: FULL POST-LOGIN PLATFORM (DEFAULT IS AI ASSISTANT)
+  // VIEW 3: FULL POST-LOGIN PLATFORM
   return (
     <div className="min-h-screen flex flex-col bg-[#FBFBF9] text-[#121212] selection:bg-[#EBE8E2] selection:text-[#121212] font-sans">
       
@@ -207,30 +209,37 @@ export default function App() {
 
       {/* MAIN VIEW: RENDERED BASED ON activeAppView */}
       <main className="flex-1">
-        {activeAppView === 'assistant' && (
-          <AssistantPage
-            user={user}
-            onLogout={handleLogout}
-            onNavigateView={handleNavigateView}
-            activeView={activeAppView}
-            onSelectCommodityForTerminal={(commodity) => {
-              setMandiTab('exchange');
-              setActiveAppView('terminal');
-            }}
-          />
-        )}
-
         {activeAppView === 'terminal' && (
           <MarketTerminalPage 
             activeTab={mandiTab} 
             onTabChange={setMandiTab} 
-            onReturnToAssistant={() => setActiveAppView('assistant')}
+            onReturnToAssistant={() => setActiveAppView('terminal')}
+          />
+        )}
+
+        {activeAppView === 'disease' && (
+          <DiseaseDetectionPage
+            onNavigateToMarketTerminal={() => {
+              setActiveAppView('terminal');
+              setMandiTab('exchange');
+            }}
+            onOpenCopilot={() => {}}
+          />
+        )}
+
+        {activeAppView === 'recommendation' && (
+          <CropRecommendationPage
+            onNavigateToMarketTerminal={() => {
+              setActiveAppView('terminal');
+              setMandiTab('exchange');
+            }}
+            onOpenCopilot={() => {}}
           />
         )}
 
         {activeAppView === 'transactions' && (
           <TransactionsPage 
-            onReturnToAssistant={() => setActiveAppView('assistant')}
+            onReturnToAssistant={() => setActiveAppView('terminal')}
           />
         )}
 
@@ -238,10 +247,20 @@ export default function App() {
           <ProfilePage 
             user={user} 
             onLogout={handleLogout}
-            onReturnToAssistant={() => setActiveAppView('assistant')}
+            onReturnToAssistant={() => setActiveAppView('terminal')}
           />
         )}
       </main>
+
+      {/* Global Persistent Floating AI Copilot Drawer */}
+      <FloatingCopilotDrawer 
+        user={user} 
+        onNavigateView={handleNavigateView} 
+        onSelectMandiTab={(tab) => {
+          setMandiTab(tab);
+          setActiveAppView('terminal');
+        }} 
+      />
 
       {/* Global Commodity & Mandi Search Modal */}
       <SearchModal 
@@ -254,13 +273,11 @@ export default function App() {
         }}
       />
 
-      {/* Footer is only rendered on Terminal, Transactions, and Profile pages to keep chat area clean */}
-      {activeAppView !== 'assistant' && (
-        <Footer onSelectMandiTab={(tab) => {
-          setMandiTab(tab);
-          setActiveAppView('terminal');
-        }} />
-      )}
+      {/* Footer */}
+      <Footer onSelectMandiTab={(tab) => {
+        setMandiTab(tab);
+        setActiveAppView('terminal');
+      }} />
 
     </div>
   );

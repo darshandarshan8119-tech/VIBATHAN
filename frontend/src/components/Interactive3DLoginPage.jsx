@@ -187,41 +187,14 @@ export default function Interactive3DLoginPage({ isOpen, onClose, onLoginSuccess
               </p>
             </div>
 
-            {/* Persona Switcher (Farmer / E-Commerce vs Merchant / Stock Market) */}
-            <div className="grid grid-cols-2 gap-2 p-1 bg-white/5 rounded-2xl border border-white/10 mb-5">
-              <button
-                type="button"
-                onClick={() => setRole('farmer')}
-                className={`flex flex-col items-center justify-center py-2.5 px-3 rounded-xl transition-all ${
-                  role === 'farmer' 
-                    ? 'bg-[#D97706] text-[#111315] shadow-md font-black' 
-                    : 'text-white/60 hover:text-white'
-                }`}>
-                <div className="flex items-center gap-1.5 text-xs font-heading font-bold">
-                  <Tractor className="w-3.5 h-3.5" />
-                  <span>Kisan / Estate Owner</span>
+            {/* Persona Switcher (Farmer / Kisan Only) */}
+            <div className="p-1 bg-white/5 rounded-2xl border border-white/10 mb-5">
+              <div className="flex items-center justify-center py-2.5 px-3 rounded-xl bg-[#D97706] text-[#111315] shadow-md font-black">
+                <div className="flex items-center gap-2 text-xs font-heading font-bold">
+                  <Tractor className="w-4 h-4" />
+                  <span>Kisan / Certified Agricultural Producer</span>
                 </div>
-                <span className="text-[9px] font-sans opacity-80 mt-0.5">
-                  Rent Tractors &bull; Buy Seeds &bull; Sell Lots
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setRole('merchant')}
-                className={`flex flex-col items-center justify-center py-2.5 px-3 rounded-xl transition-all ${
-                  role === 'merchant' 
-                    ? 'bg-white text-[#111315] shadow-md font-black' 
-                    : 'text-white/60 hover:text-white'
-                }`}>
-                <div className="flex items-center gap-1.5 text-xs font-heading font-bold">
-                  <Scale className="w-3.5 h-3.5 text-[#10B981]" />
-                  <span>Mandi Trader / Buyer</span>
-                </div>
-                <span className="text-[9px] font-sans opacity-80 mt-0.5">
-                  Order Book &bull; Real-Time Bids &bull; APMC
-                </span>
-              </button>
+              </div>
             </div>
 
             {/* Method Tabs (Mobile OTP vs Password) */}
@@ -346,27 +319,16 @@ export default function Interactive3DLoginPage({ isOpen, onClose, onLoginSuccess
             <span className="text-[10px] text-white/40 uppercase font-mono block mb-2 font-bold">
               Instant 1-Click Demo Testing:
             </span>
-            <div className="grid grid-cols-2 gap-2">
+            <div>
               <button
                 type="button"
                 onClick={() => handleQuickDemoLogin('farmer')}
-                className="p-2.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-left text-xs transition-all group">
+                className="w-full p-2.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-left text-xs transition-all group">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-[#D97706] font-bold">🌾 E-Commerce Farmer</span>
-                  <span className="text-[9px] text-[#10B981] font-mono">Store + Rent</span>
+                  <span className="text-[10px] text-[#D97706] font-bold">🌾 Certified Kisan Producer</span>
+                  <span className="text-[9px] text-[#10B981] font-mono">Verified Mandi Access</span>
                 </div>
-                <span className="text-white font-semibold block text-[11px] truncate">Harpreet Singh (Punjab)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin('merchant')}
-                className="p-2.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-left text-xs transition-all group">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-[#10B981] font-bold">📈 Stock Mandi Trader</span>
-                  <span className="text-[9px] text-white/50 font-mono">Order Book</span>
-                </div>
-                <span className="text-white font-semibold block text-[11px] truncate">ITC Agri Business</span>
+                <span className="text-white font-semibold block text-[11px] truncate">Harpreet Singh (Punjab Estate)</span>
               </button>
             </div>
           </div>
